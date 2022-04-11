@@ -142,7 +142,7 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
             case "RCINFO1":
                 return Http.getSessionKey();
             default:
-                System.out.println("-- getParameter(\"$name\") wasn't found --");
+                System.out.println("-- getParameter(" + name + ") wasn't found --");
                 return null;
         }
     }
