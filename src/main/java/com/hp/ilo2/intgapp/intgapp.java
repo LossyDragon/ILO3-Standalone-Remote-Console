@@ -6,6 +6,7 @@ import com.hp.ilo2.virtdevs.MediaAccess;
 import com.hp.ilo2.virtdevs.VErrorDialog;
 import com.hp.ilo2.virtdevs.VFileDialog;
 import com.hp.ilo2.virtdevs.virtdevs;
+
 import java.awt.BorderLayout;
 import java.awt.Graphics;
 import java.awt.Toolkit;
@@ -15,6 +16,8 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
@@ -28,7 +31,13 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 
+import util.Http;
+
 public class intgapp extends JApplet implements Runnable, ActionListener, ItemListener {
+
+    /* ILO3RemCon addition */
+    private String hostName;
+
     public String optional_features;
     public JFrame dispFrame;
     public JPanel mainPanel;
@@ -87,6 +96,56 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
     public remcons remconsObj = new remcons(this);
     public locinfo locinfoObj = new locinfo(this);
     public jsonparser jsonObj = new jsonparser(this);
+
+    /* ILO3RemCon addition */
+    public intgapp(String hostname) {
+        this.hostName = hostname;
+    }
+
+    /* ILO3RemCon addition */
+    @Override
+    public URL getCodeBase() {
+        try {
+            return new URL(Http.getLoginUrl(hostName));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /* ILO3RemCon addition */
+    @Override
+    public URL getDocumentBase() {
+        try {
+            return new URL(Http.getJavaAppletUrl(hostName, Http.getSessionKey()));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /* ILO3RemCon addition */
+    // TODO: getParameter("INFO0") wasn't found
+    // TODO: getParameter("INFO2") wasn't found
+    // TODO: getParameter("floppy") wasn't found
+    // TODO: getParameter("cdrom") wasn't found
+    // TODO: getParameter("device") wasn't found
+    // TODO: getParameter("config") wasn't found
+    // TODO: getParameter("UNIQUE_FEATURES") wasn't found
+    @Override
+    public String getParameter(String name) {
+        switch (name) {
+            case "hostAddress":
+                return hostName;
+            case "RCINFO1":
+                return Http.getSessionKey();
+            default:
+                System.out.println("-- getParameter(\"$name\") wasn't found --");
+                return null;
+        }
+    }
 
     public String getLocalString(int i) {
         String str = "";

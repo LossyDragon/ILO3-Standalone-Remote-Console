@@ -1,5 +1,8 @@
 package com.hp.ilo2.intgapp;
 
+import util.Http;
+
+import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -82,7 +85,7 @@ public class jsonparser {
     public String getJSONRequest(String str) {
         String str2;
         String str3;
-        HttpURLConnection httpURLConnection = null;
+        HttpsURLConnection httpsURLConnection = null; // ILO3RemCon modify
         try {
             try {
                 String host = this.ParentApp.getCodeBase().getHost();
@@ -95,13 +98,15 @@ public class jsonparser {
                 }
                 String stringBuffer = new StringBuffer().append("https://").append(host).append(str3).append("/json/").append(str).toString();
                 String parameter = this.ParentApp.getParameter("RCINFO1");
-                httpURLConnection = (HttpURLConnection) new URL(stringBuffer).openConnection();
-                httpURLConnection.setRequestMethod("GET");
-                httpURLConnection.setDoOutput(true);
-                httpURLConnection.setUseCaches(false);
-                httpURLConnection.setRequestProperty("Cookie", new StringBuffer().append("sessionKey=").append(parameter).toString());
-                httpURLConnection.connect();
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
+                httpsURLConnection = (HttpsURLConnection) new URL(stringBuffer).openConnection();
+                httpsURLConnection.setRequestMethod("GET");
+                httpsURLConnection.setDoOutput(true);
+                httpsURLConnection.setUseCaches(false);
+                httpsURLConnection.setSSLSocketFactory(Http.sslContext.getSocketFactory()); // ILO3RemCon addon
+                httpsURLConnection.setHostnameVerifier((hostname, session) -> true); // ILO3RemCon addon
+                httpsURLConnection.setRequestProperty("Cookie", new StringBuffer().append("sessionKey=").append(parameter).toString());
+                httpsURLConnection.connect();
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(httpsURLConnection.getInputStream()));
                 StringBuffer stringBuffer2 = new StringBuffer();
                 while (true) {
                     String readLine = bufferedReader.readLine();
@@ -111,17 +116,17 @@ public class jsonparser {
                     stringBuffer2.append(new StringBuffer().append(readLine).append('\n').toString());
                 }
                 str2 = stringBuffer2.toString();
-                httpURLConnection.disconnect();
+                httpsURLConnection.disconnect();
             } catch (Exception e) {
                 String property = System.getProperty("line.separator");
                 this.ParentApp.rcErrMessage = new StringBuffer().append(e.getMessage()).append(".").append(property).append(property).append("Your browser session may have timed out.").toString();
                 e.printStackTrace();
                 str2 = null;
-                httpURLConnection.disconnect();
+                httpsURLConnection.disconnect();
             }
             return str2;
         } catch (Throwable th) {
-            httpURLConnection.disconnect();
+            httpsURLConnection.disconnect();
             throw th;
         }
     }

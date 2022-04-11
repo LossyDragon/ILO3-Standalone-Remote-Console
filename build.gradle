@@ -11,12 +11,12 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.20"
-
+    implementation "com.squareup.moshi:moshi-kotlin:1.13.0"
 }
 
 application {
     mainClass.set('MainKt')
-    // applicationDefaultJvmArgs = ['-Djava.security.properties=java.security']
+    applicationDefaultJvmArgs = ['-Djava.security.properties=java.security']
 }
 
 jar {
@@ -32,3 +32,5 @@ compileKotlin {
         jvmTarget = "1.8"
     }
 }
+
+compileJava.options.encoding = 'UTF-8'
