@@ -23,6 +23,7 @@ import java.util.Objects;
 import javax.swing.*;
 
 import util.Http;
+import util.Utils;
 
 public class intgapp extends JApplet implements Runnable, ActionListener, ItemListener {
 
@@ -221,9 +222,9 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
                                 this.vdMenuItems[this.vdmenuIndx].setActionCommand("fd" + devices[i4]);
                                 this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
                                 if (devices[i4].equals("A:") || devices[i4].equals("B:")) {
-                                    this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/FloppyDisk.png"))));
+                                    this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "FloppyDisk.png")));
                                 } else {
-                                    this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/usb.png"))));
+                                    this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "usb.png")));
                                 }
                                 this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx], i);
                                 this.vdMenu.updateUI();
@@ -315,7 +316,7 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         this.dispFrame.setVisible(true);
         try {
             this.dispFrame.getInsets();
-            this.dispFrame.setIconImage(getImage(getClass().getClassLoader().getResource("com/hp/ilo2/remcons/images/hp_logo.png")));
+            this.dispFrame.setIconImage(Utils.getResourceImage(this, "hp_logo.png"));
             if (this.dispFrame.getIconImage() == null) {
                 System.out.println("Dimage is null");
             }
@@ -355,7 +356,7 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
                     this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(device);
                     this.vdMenuItems[this.vdmenuIndx].setActionCommand("cd" + device);
                     this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
-                    this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/CD_Drive.png"))));
+                    this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "CD_Drive.png")));
                     this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
                     this.vdmenuIndx++;
                 } else if (devtype == 2) {
@@ -363,9 +364,9 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
                     this.vdMenuItems[this.vdmenuIndx].setActionCommand("fd" + device);
                     this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
                     if (device.equals("A:") || device.equals("B:")) {
-                        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/FloppyDisk.png"))));
+                        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "FloppyDisk.png")));
                     } else {
-                        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/usb.png"))));
+                        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "usb.png")));
                     }
                     this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
                     this.vdmenuIndx++;
@@ -379,12 +380,12 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1022 + " " + locinfo.MENUSTR_100A);
         this.vdMenuItems[this.vdmenuIndx].setActionCommand("fd" + locinfo.STATUSSTR_3117);
         this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
-        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Image_File.png"))));
+        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Image_File.png")));
         this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
         this.vdmenuIndx++;
         this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1023 + locinfo.MENUSTR_100A);
         this.vdMenuItems[this.vdmenuIndx].setActionCommand("FLOPPY");
-        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Network.png"))));
+        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Network.png")));
         this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
         this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
         this.vdmenuIndx++;
@@ -395,12 +396,12 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1022 + " " + locinfo.MENUSTR_100B);
         this.vdMenuItems[this.vdmenuIndx].setActionCommand("cd" + locinfo.STATUSSTR_3117);
         this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
-        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Image_File.png"))));
+        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Image_File.png")));
         this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
         this.vdmenuIndx++;
         this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1023 + locinfo.MENUSTR_100B);
         this.vdMenuItems[this.vdmenuIndx].setActionCommand("CDROM");
-        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Network.png"))));
+        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Network.png")));
         this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
         this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
         this.vdmenuIndx++;
@@ -449,20 +450,20 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         ClassLoader classLoader = getClass().getClassLoader();
         this.psMenu = new JMenu(locinfo.MENUSTR_1001);
         this.momPress = new JMenuItem(locinfo.MENUSTR_1004);
-        this.momPress.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/press.png"))));
+        this.momPress.setIcon(new ImageIcon(Utils.getResourceImage(this, "press.png")));
         this.momPress.setActionCommand("psMomPress");
         this.momPress.addActionListener(this);
         this.psMenu.add(this.momPress);
         this.pressHold = new JMenuItem(locinfo.MENUSTR_1005);
-        this.pressHold.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/hold.png"))));
+        this.pressHold.setIcon(new ImageIcon(Utils.getResourceImage(this, "hold.png")));
         this.pressHold.setActionCommand("psPressHold");
         this.pressHold.addActionListener(this);
         this.powerCycle = new JMenuItem(locinfo.MENUSTR_1006);
-        this.powerCycle.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/coldboot.png"))));
+        this.powerCycle.setIcon(new ImageIcon(Utils.getResourceImage(this, "coldboot.png")));
         this.powerCycle.setActionCommand("psPowerCycle");
         this.powerCycle.addActionListener(this);
         this.sysReset = new JMenuItem(locinfo.MENUSTR_1007);
-        this.sysReset.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/reset.png"))));
+        this.sysReset.setIcon(new ImageIcon(Utils.getResourceImage(this, "reset.png")));
         this.sysReset.setActionCommand("psSysReset");
         this.sysReset.addActionListener(this);
         if (i == 1) {
@@ -492,22 +493,22 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         this.kbAFMenu = new JMenu("ALT-Fn");
         this.kbLangMenu = new JMenu(locinfo.MENUSTR_100E);
         this.ctlAltDel = new JMenuItem(locinfo.MENUSTR_1008);
-        this.ctlAltDel.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Keyboard.png"))));
+        this.ctlAltDel.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
         this.ctlAltDel.setActionCommand("kbCtlAltDel");
         this.ctlAltDel.addActionListener(this);
         this.kbMenu.add(this.ctlAltDel);
         this.numLock = new JMenuItem(locinfo.MENUSTR_1009);
-        this.numLock.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Keyboard.png"))));
+        this.numLock.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
         this.numLock.setActionCommand("kbNumLock");
         this.numLock.addActionListener(this);
         this.kbMenu.add(this.numLock);
         this.capsLock = new JMenuItem(locinfo.MENUSTR_1020);
-        this.capsLock.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Keyboard.png"))));
+        this.capsLock.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
         this.capsLock.setActionCommand("kbCapsLock");
         this.capsLock.addActionListener(this);
         this.kbMenu.add(this.capsLock);
         this.ctlAltBack = new JMenuItem("CTRL-ALT-BACKSPACE");
-        this.ctlAltBack.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Keyboard.png"))));
+        this.ctlAltBack.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
         this.ctlAltBack.setActionCommand("kbCtlAltBack");
         this.ctlAltBack.addActionListener(this);
         this.ctlAltFn = new JMenuItem[this.REMCONS_MAX_FN_KEYS];

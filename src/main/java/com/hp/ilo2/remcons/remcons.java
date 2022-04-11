@@ -3,24 +3,14 @@ package com.hp.ilo2.remcons;
 import com.hp.ilo2.intgapp.intgapp;
 import com.hp.ilo2.intgapp.locinfo;
 import com.hp.ilo2.virtdevs.VErrorDialog;
-import com.hp.ilo2.virtdevs.virtdevs;
+import util.Utils;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Image;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.ImageObserver;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Locale;
 import java.util.Properties;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 
 public class remcons extends JPanel implements TimerListener, Runnable {
 
@@ -113,10 +103,6 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         this.ParentApp = intgappVar;
     }
 
-    public Image getImg(String str) {
-        return this.ParentApp.getImage(getClass().getClassLoader().getResource("com/hp/ilo2/remcons/images/" + str));
-    }
-
     void waitImage(Image image, ImageObserver imageObserver) {
         int checkImage;
         long currentTimeMillis = System.currentTimeMillis();
@@ -135,28 +121,28 @@ public class remcons extends JPanel implements TimerListener, Runnable {
 
     public void init() {
         this.img = new Image[22];
-        this.img[0] = getImg("blank_cd.png");
-        this.img[1] = getImg("blue.png");
-        this.img[2] = getImg("CD_Drive.png");
-        this.img[3] = getImg("FloppyDisk.png");
-        this.img[4] = getImg("Folder.png");
-        this.img[5] = getImg("green.png");
-        this.img[6] = getImg("hold.png");
-        this.img[7] = getImg("hp.jpg");
-        this.img[8] = getImg("hp_logo.png");
-        this.img[9] = getImg("hp_logo_blue_lgs.png");
+        this.img[0] = Utils.getResourceImage(ParentApp, "blank_cd.png");
+        this.img[1] = Utils.getResourceImage(ParentApp, "blue.png");
+        this.img[2] = Utils.getResourceImage(ParentApp, "CD_Drive.png");
+        this.img[3] = Utils.getResourceImage(ParentApp, "FloppyDisk.png");
+        this.img[4] = Utils.getResourceImage(ParentApp, "Folder.png");
+        this.img[5] = Utils.getResourceImage(ParentApp, "green.png");
+        this.img[6] = Utils.getResourceImage(ParentApp, "hold.png");
+        this.img[7] = Utils.getResourceImage(ParentApp, "hp.jpg");
+        this.img[8] = Utils.getResourceImage(ParentApp, "hp_logo.png");
+        this.img[9] = Utils.getResourceImage(ParentApp, "hp_logo_blue_lgs.png");
         this.img[10] = null;
-        this.img[11] = getImg("irc.png");
-        this.img[12] = getImg("Keyboard.png");
-        this.img[13] = getImg("off.png");
-        this.img[14] = getImg("press.png");
-        this.img[15] = getImg("ProtectFormHS.png");
-        this.img[16] = getImg("pwr.png");
-        this.img[17] = getImg("pwr_off.png");
-        this.img[18] = getImg("red.png");
-        this.img[19] = getImg("UnProtectFormHS.png");
-        this.img[20] = getImg("Warning.png");
-        this.img[21] = getImg("yellow.png");
+        this.img[11] = Utils.getResourceImage(ParentApp, "irc.png");
+        this.img[12] = Utils.getResourceImage(ParentApp, "Keyboard.png");
+        this.img[13] = Utils.getResourceImage(ParentApp, "off.png");
+        this.img[14] = Utils.getResourceImage(ParentApp, "press.png");
+        this.img[15] = Utils.getResourceImage(ParentApp, "ProtectFormHS.png");
+        this.img[16] = Utils.getResourceImage(ParentApp, "pwr.png");
+        this.img[17] = Utils.getResourceImage(ParentApp, "pwr_off.png");
+        this.img[18] = Utils.getResourceImage(ParentApp, "red.png");
+        this.img[19] = Utils.getResourceImage(ParentApp, "UnProtectFormHS.png");
+        this.img[20] = Utils.getResourceImage(ParentApp, "Warning.png");
+        this.img[21] = Utils.getResourceImage(ParentApp, "yellow.png");
         this.locale_setter = new Thread(this);
         this.locale_setter.start();
         init_params();
@@ -181,16 +167,12 @@ public class remcons extends JPanel implements TimerListener, Runnable {
                     str = "HpqKbHook-x86-linux-32";
                 }
             }
-            if (ExtractKeyboardDll(str)) {
-                this.kHook = new KeyboardHook();
-                if (this.kHook == null) {
-                    System.out.println("remcons: kHook = null, Failed to initialize and load kHook");
-                } else {
-                    this.kbHookAvailable = true;
-                    this.kHook.clearKeymap();
-                }
+            this.kHook = new KeyboardHook(str);
+            if (this.kHook == null) {
+                System.out.println("remcons: kHook = null, Failed to initialize and load kHook");
             } else {
-                System.out.println("ExtractKeyboardDll() returns false");
+                this.kbHookAvailable = true;
+                this.kHook.clearKeymap();
             }
         }
         this.session = new cim(this);
@@ -329,56 +311,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         }
     }
 
-    public boolean ExtractKeyboardDll(String str) {
-        boolean z;
-        String property = System.getProperty("java.io.tmpdir");
-        String lowerCase = System.getProperty("os.name").toLowerCase();
-        String property2 = System.getProperty("file.separator");
-        if (lowerCase.startsWith("windows") || lowerCase.startsWith("linux")) {
-            if (property == null) {
-                property = lowerCase.startsWith("windows") ? "C:\\TEMP" : "/tmp";
-            }
-            File file = new File(property);
-            if (!file.exists()) {
-                file.mkdir();
-            }
-            if (!property.endsWith(property2)) {
-                property = property + property2;
-            }
-            virtdevs virtdevsVar = this.ParentApp.virtdevsObj;
-            String stringBuffer = property + "HpqKbHook-" +
-                    Integer.toHexString(virtdevs.UID) + ".dll";
-            System.out.println("checking for kbddll" + stringBuffer);
-            if (new File(stringBuffer).exists()) {
-                System.out.println(str + " already present ..");
-                return true;
-            }
-            System.out.println("Extracting " + str + "...");
-            byte[] bArr = new byte[4096];
-            try {
-                InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("com/hp/ilo2/remcons/" + str);
-                FileOutputStream fileOutputStream = new FileOutputStream(stringBuffer);
-                while (true) {
-                    int read = resourceAsStream.read(bArr, 0, 4096);
-                    if (read == -1) {
-                        break;
-                    }
-                    fileOutputStream.write(bArr, 0, read);
-                }
-                System.out.println("Writing dll to " + stringBuffer + "complete");
-                resourceAsStream.close();
-                fileOutputStream.close();
-                z = true;
-            } catch (IOException e) {
-                System.out.println("dllExtract: " + e);
-                z = false;
-            }
-        } else {
-            System.out.println("Cannot load keyboardHook DLL. Non Windows-Linux client system.");
-            z = false;
-        }
-        return z;
-    }
+    // Removed ExtractKeyboardDll(String str)
 
     public void stop() {
         if (this.locale_setter != null && this.locale_setter.isAlive()) {
