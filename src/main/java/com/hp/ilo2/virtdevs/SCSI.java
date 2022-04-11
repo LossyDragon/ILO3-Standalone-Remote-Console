@@ -56,7 +56,7 @@ public abstract class SCSI {
     }
 
     public boolean getWriteProt() {
-        D.println(3, new StringBuffer().append("media.wp = ").append(this.media.wp()).toString());
+        D.println(3, "media.wp = " + this.media.wp());
         return this.media.wp();
     }
 
@@ -74,15 +74,15 @@ public abstract class SCSI {
     }
 
     public static int mk_int32(byte[] bArr, int i) {
-        return ((bArr[i + 0] & 255) << 24) | ((bArr[i + 1] & 255) << 16) | ((bArr[i + 2] & 255) << 8) | (bArr[i + 3] & 255);
+        return ((bArr[i] & 255) << 24) | ((bArr[i + 1] & 255) << 16) | ((bArr[i + 2] & 255) << 8) | (bArr[i + 3] & 255);
     }
 
     public static int mk_int24(byte[] bArr, int i) {
-        return ((bArr[i + 0] & 255) << 16) | ((bArr[i + 1] & 255) << 8) | (bArr[i + 2] & 255);
+        return ((bArr[i] & 255) << 16) | ((bArr[i + 1] & 255) << 8) | (bArr[i + 2] & 255);
     }
 
     public static int mk_int16(byte[] bArr, int i) {
-        return ((bArr[i + 0] & 255) << 8) | (bArr[i + 1] & 255);
+        return ((bArr[i] & 255) << 8) | (bArr[i + 1] & 255);
     }
 
     
@@ -143,7 +143,7 @@ public abstract class SCSI {
             this.out.flush();
             this.reply.disconnect(false);
         } catch (Exception e) {
-            D.println(1, new StringBuffer().append("Exception in send_disconnect").append(e).toString());
+            D.println(1, "Exception in send_disconnect" + e);
             e.printStackTrace();
         }
     }

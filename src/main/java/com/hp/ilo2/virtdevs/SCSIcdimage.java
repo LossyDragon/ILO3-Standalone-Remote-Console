@@ -20,14 +20,14 @@ public class SCSIcdimage extends SCSI {
 
     public SCSIcdimage(Socket socket, InputStream inputStream, BufferedOutputStream bufferedOutputStream, String str, int i, virtdevs virtdevsVar) throws IOException {
         super(socket, inputStream, bufferedOutputStream, str, i);
-        D.println(1, new StringBuffer().append("Media open returns ").append(this.media.open(str, 0)).append(" / ").append(this.media.size()).append(" bytes").toString());
+        D.println(1, "Media open returns " + this.media.open(str, 0) + " / " + this.media.size() + " bytes");
         this.v = virtdevsVar;
     }
 
     @Override // com.hp.ilo2.virtdevs.SCSI
     public boolean process() throws IOException {
         boolean z = true;
-        D.println(1, new StringBuffer().append("Device: ").append(this.selectedDevice).append(" (").append(this.targetIsDevice).append(")").toString());
+        D.println(1, "Device: " + this.selectedDevice + " (" + this.targetIsDevice + ")");
         read_command(this.req, 12);
         D.print(1, "SCSI Request: ");
         D.hexdump(1, this.req, 12);
@@ -81,7 +81,7 @@ public class SCSIcdimage extends SCSI {
                 client_mode_sense(this.req);
                 break;
             default:
-                D.println(0, new StringBuffer().append("Unknown request:cmd = ").append(Integer.toHexString(this.req[0])).toString());
+                D.println(0, "Unknown request:cmd = " + Integer.toHexString(this.req[0]));
                 this.reply.set(5, 36, 0, 0);
                 this.reply.send(this.out);
                 this.out.flush();
@@ -94,9 +94,9 @@ public class SCSIcdimage extends SCSI {
     }
 
     void client_read(byte[] bArr) throws IOException {
-        long mk_int32 = SCSI.mk_int32(bArr, 2) * 2048;
+        long mk_int32 = SCSI.mk_int32(bArr, 2) * 2048L;
         int mk_int322 = (bArr[0] == 168 ? SCSI.mk_int32(bArr, 6) : SCSI.mk_int16(bArr, 7)) * 2048;
-        D.println(3, new StringBuffer().append("CDImage :Client read ").append(mk_int32).append(", len=").append(mk_int322).toString());
+        D.println(3, "CDImage :Client read " + mk_int32 + ", len=" + mk_int322);
         if (this.fdd_state == 0) {
             D.println(3, "media not present");
             this.reply.set(2, 58, 0, 0);
@@ -172,7 +172,7 @@ public class SCSIcdimage extends SCSI {
             bArr[0] = (byte) ((size >> 24) & telnet.TELNET_IAC);
             bArr[1] = (byte) ((size >> 16) & telnet.TELNET_IAC);
             bArr[2] = (byte) ((size >> 8) & telnet.TELNET_IAC);
-            bArr[3] = (byte) ((size >> 0) & telnet.TELNET_IAC);
+            bArr[3] = (byte) ((size) & telnet.TELNET_IAC);
             bArr[6] = 8;
         }
         this.reply.send(this.out);
@@ -232,10 +232,7 @@ public class SCSIcdimage extends SCSI {
             this.buffer[10] = z ? (byte) 2 : (byte) 0;
             this.buffer[11] = 0;
         }
-        int i6 = 412;
-        if (mk_int16 < 412) {
-            i6 = mk_int16;
-        }
+        int i6 = Math.min(mk_int16, 412);
         D.hexdump(3, this.buffer, i6);
         this.reply.set(0, 0, 0, i6);
         this.reply.send(this.out);
@@ -296,9 +293,9 @@ public class SCSIcdimage extends SCSI {
                 this.buffer[5] = 2;
             }
             D.hexdump(3, this.buffer, 8);
-            this.reply.set(0, 0, 0, mk_int16 < 8 ? mk_int16 : 8);
+            this.reply.set(0, 0, 0, Math.min(mk_int16, 8));
             this.reply.send(this.out);
-            this.out.write(this.buffer, 0, mk_int16 < 8 ? mk_int16 : 8);
+            this.out.write(this.buffer, 0, Math.min(mk_int16, 8));
             this.out.flush();
             return;
         }
@@ -307,9 +304,9 @@ public class SCSIcdimage extends SCSI {
         this.buffer[2] = Byte.MIN_VALUE;
         this.buffer[3] = 16;
         D.hexdump(3, this.buffer, 4);
-        this.reply.set(0, 0, 0, mk_int16 < 4 ? mk_int16 : 4);
+        this.reply.set(0, 0, 0, Math.min(mk_int16, 4));
         this.reply.send(this.out);
-        this.out.write(this.buffer, 0, mk_int16 < 4 ? mk_int16 : 4);
+        this.out.write(this.buffer, 0, Math.min(mk_int16, 4));
         this.out.flush();
     }
 }

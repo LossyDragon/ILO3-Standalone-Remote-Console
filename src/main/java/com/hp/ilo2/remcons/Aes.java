@@ -7,7 +7,7 @@ public class Aes {
     private int Nb;
     private int Nk;
     private int Nr;
-    private byte[] key;
+    private final byte[] key;
     private byte[][] Sbox;
     private byte[][] iSbox;
     private byte[][] w;
@@ -339,39 +339,39 @@ public class Aes {
     }
 
     public String DumpKey() {
-        String string = "";
+        StringBuilder string = new StringBuilder();
         String string2 = "";
         int n = 0;
         while (n < this.key.length) {
             string2 = Integer.toHexString(this.key[n] & 0xFF);
             if (string2.length() == 1) {
-                string = string + "0";
+                string.append("0");
             }
-            string = string + string2 + " ";
+            string.append(string2).append(" ");
             ++n;
         }
-        return string;
+        return string.toString();
     }
 
     public String DumpTwoByTwo(byte[][] byArray) {
-        String string = "";
+        StringBuilder string = new StringBuilder();
         String string2 = "";
         int n = 0;
         while (n < byArray.length) {
-            string = string + "[" + n + "]" + " ";
+            string.append("[").append(n).append("]").append(" ");
             int n2 = 0;
             while (n2 < byArray[n].length) {
                 string2 = Integer.toHexString(byArray[n][n2] & 0xFF);
                 if (string2.length() == 1) {
-                    string = string + "0";
+                    string.append("0");
                 }
-                string = string + string2 + " ";
+                string.append(string2).append(" ");
                 ++n2;
             }
-            string = string + "\n";
+            string.append("\n");
             ++n;
         }
-        return string;
+        return string.toString();
     }
 
     public byte randomValue() {

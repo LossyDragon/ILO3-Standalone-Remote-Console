@@ -11,13 +11,13 @@ public class Timer implements Runnable {
     private static final int STATE_STOPPED = 3;
     private static final int POLL_PERIOD = 50;
     private int timeout_count;
-    private int timeout_max;
-    private boolean one_shot;
+    private final int timeout_max;
+    private final boolean one_shot;
     private long start_time_millis;
     private long stop_time_millis;
     private TimerListener callback;
     private Object callback_info;
-    private Object mutex;
+    private final Object mutex;
     private int state = 0;
     private Date date = new Date();
 
@@ -111,12 +111,11 @@ public class Timer implements Runnable {
                         }
                         if (!this.one_shot) {
                             this.timeout_count = 0;
-                            break;
                         } else {
                             this.state = 0;
                             z = false;
-                            break;
                         }
+                        break;
                     }
                     break;
                 case 3:

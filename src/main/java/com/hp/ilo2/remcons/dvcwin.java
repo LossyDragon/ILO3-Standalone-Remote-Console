@@ -28,18 +28,18 @@ public class dvcwin extends JPanel implements Runnable {
     protected Graphics offscreen_gc = null;
     protected Image clearScreenImage = null;
     protected Thread screen_updater = null;
-    private int refresh_count = 0;
-    private int need_to_refresh = 1;
+    private final int refresh_count = 0;
+    private final int need_to_refresh = 1;
     private int need_to_refresh_r = 1;
     private int need_to_refresh_w = 1;
     public boolean mirror = false;
     private int frametime = 0;
-    private int paint_count = 0;
+    private final int paint_count = 0;
     protected boolean updater_running = false;
     private boolean abs_dimen_initialized = false;
     private boolean clear_screen = false;
     private boolean firstResize = true;
-    protected ColorModel cm = new DirectColorModel(32, 16711680, 65280, (int) telnet.TELNET_IAC, 0);
+    protected ColorModel cm = new DirectColorModel(32, 16711680, 65280, telnet.TELNET_IAC, 0);
 
     public dvcwin(int i, int i2, remcons remconsVar) {
         this.screen_x = i;
@@ -124,7 +124,7 @@ public class dvcwin extends JPanel implements Runnable {
     }
 
     public void set_abs_dimensions(int i, int i2) {
-        if (i != this.screen_x || i2 != this.screen_y || false == this.abs_dimen_initialized || this.clear_screen) {
+        if (i != this.screen_x || i2 != this.screen_y || !this.abs_dimen_initialized || this.clear_screen) {
             synchronized (this) {
                 this.screen_x = i;
                 this.screen_y = i2;
@@ -154,7 +154,7 @@ public class dvcwin extends JPanel implements Runnable {
             if (this.firstResize) {
                 this.firstResize = false;
                 this.remconsObj.ParentApp.dispFrame.pack();
-                this.remconsObj.ParentApp.dispFrame.setLocationRelativeTo((Component) null);
+                this.remconsObj.ParentApp.dispFrame.setLocationRelativeTo(null);
             }
         }
     }
@@ -176,7 +176,7 @@ public class dvcwin extends JPanel implements Runnable {
             System.out.println("Screen is no longer updating");
             return;
         }
-        System.out.println(new StringBuffer().append("dvcwin:show_text ").append(str).toString());
+        System.out.println("dvcwin:show_text " + str);
         if (!(this.screen_x == 640 && this.screen_y == 100)) {
             set_abs_dimensions(640, 100);
             this.image_source = null;
@@ -189,7 +189,7 @@ public class dvcwin extends JPanel implements Runnable {
             new Color(0);
             graphics.setColor(Color.black);
             graphics.fillRect(0, 0, this.screen_x, this.screen_y);
-            Font font = new Font("Courier", 0, 20);
+            Font font = new Font("Courier", Font.PLAIN, 20);
             new Color(0);
             graphics.setColor(Color.white);
             graphics.setFont(font);

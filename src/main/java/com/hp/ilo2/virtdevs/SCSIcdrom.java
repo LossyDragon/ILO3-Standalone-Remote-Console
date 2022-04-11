@@ -24,16 +24,16 @@ public class SCSIcdrom extends SCSI {
     static final int[] commands = {30, NONE, 37, 16777224, 29, NONE, 0, NONE, 40, 25296903, SCSI.SCSI_READ_12, 25427974, 27, NONE, SCSI.SCSI_READ_CD, 25362438, SCSI.SCSI_READ_CD_MSF, READ, 68, 16777224, 66, 16908295, 67, 16908295, 78, NONE, SCSI.SCSI_MECHANISM_STATUS, 16908296, 90, 16908295, 74, 16908295};
     byte[] sense = new byte[3];
     boolean do_split_reads = false;
-    int retrycount = Integer.valueOf(virtdevs.prop.getProperty("com.hp.ilo2.virtdevs.retrycount", "10")).intValue();
+    int retrycount = Integer.valueOf(virtdevs.prop.getProperty("com.hp.ilo2.virtdevs.retrycount", "10"));
 
     void media_err(byte[] bArr, byte[] bArr2) {
-        this.dlg = new VErrorDialog(new StringBuffer().append("The CDROM drive reports a media error:\nCommand: ").append(D.hex(bArr[0], 2)).append(" ").append(D.hex(bArr[1], 2)).append(" ").append(D.hex(bArr[2], 2)).append(" ").append(D.hex(bArr[3], 2)).append(" ").append(D.hex(bArr[4], 2)).append(" ").append(D.hex(bArr[5], 2)).append(" ").append(D.hex(bArr[6], 2)).append(" ").append(D.hex(bArr[7], 2)).append(" ").append(D.hex(bArr[8], 2)).append(" ").append(D.hex(bArr[9], 2)).append(" ").append(D.hex(bArr[10], 2)).append(" ").append(D.hex(bArr[11], 2)).append("\n").append("Sense Code: ").append(D.hex(bArr2[0], 2)).append("/").append(D.hex(bArr2[1], 2)).append("/").append(D.hex(bArr2[2], 2)).append("\n\n").toString(), false);
+        this.dlg = new VErrorDialog("The CDROM drive reports a media error:\nCommand: " + D.hex(bArr[0], 2) + " " + D.hex(bArr[1], 2) + " " + D.hex(bArr[2], 2) + " " + D.hex(bArr[3], 2) + " " + D.hex(bArr[4], 2) + " " + D.hex(bArr[5], 2) + " " + D.hex(bArr[6], 2) + " " + D.hex(bArr[7], 2) + " " + D.hex(bArr[8], 2) + " " + D.hex(bArr[9], 2) + " " + D.hex(bArr[10], 2) + " " + D.hex(bArr[11], 2) + "\n" + "Sense Code: " + D.hex(bArr2[0], 2) + "/" + D.hex(bArr2[1], 2) + "/" + D.hex(bArr2[2], 2) + "\n\n", false);
     }
 
     public SCSIcdrom(Socket socket, InputStream inputStream, BufferedOutputStream bufferedOutputStream, String str, int i, virtdevs virtdevsVar) throws IOException {
         super(socket, inputStream, bufferedOutputStream, str, i);
-        D.println(1, new StringBuffer().append("Media opening ").append(str).append("(").append(i | 2).append(")").toString());
-        D.println(1, new StringBuffer().append("Media open returns ").append(this.media.open(str, i)).toString());
+        D.println(1, "Media opening " + str + "(" + (i | 2) + ")");
+        D.println(1, "Media open returns " + this.media.open(str, i));
         this.v = virtdevsVar;
     }
 
@@ -96,7 +96,7 @@ public class SCSIcdrom extends SCSI {
 
     void start_stop_unit() {
         byte[] bArr = new byte[3];
-        D.println(3, new StringBuffer().append("Start/Stop unit = ").append(this.media.scsi(new byte[]{27, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, 2, 0, this.buffer, bArr)).append(" ").append((int) bArr[0]).append("/").append((int) bArr[1]).append("/").append((int) bArr[2]).toString());
+        D.println(3, "Start/Stop unit = " + this.media.scsi(new byte[]{27, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, 2, 0, this.buffer, bArr) + " " + bArr[0] + "/" + bArr[1] + "/" + bArr[2]);
     }
 
     boolean within_75(byte[] bArr) {
@@ -107,17 +107,14 @@ public class SCSIcdrom extends SCSI {
         int mk_int322 = z ? SCSI.mk_int32(bArr, 6) : SCSI.mk_int16(bArr, 7);
         this.media.scsi(bArr3, 1, 8, bArr2, null);
         int mk_int323 = SCSI.mk_int32(bArr2, 0);
-        if (mk_int32 > mk_int323 - 75 || mk_int32 + mk_int322 > mk_int323 - 75) {
-            return true;
-        }
-        return false;
+        return mk_int32 > mk_int323 - 75 || mk_int32 + mk_int322 > mk_int323 - 75;
     }
 
     int split_read() {
         boolean z = this.req[0] == 168;
         int mk_int32 = SCSI.mk_int32(this.req, 2);
         int mk_int322 = z ? SCSI.mk_int32(this.req, 6) : SCSI.mk_int16(this.req, 7);
-        int i = mk_int322 > 32 ? 32 : mk_int322;
+        int i = Math.min(mk_int322, 32);
         this.req[2] = (byte) (mk_int32 >> 24);
         this.req[3] = (byte) (mk_int32 >> 16);
         this.req[4] = (byte) (mk_int32 >> 8);
@@ -181,7 +178,7 @@ public class SCSIcdrom extends SCSI {
                 if (i4 == 0) {
                     read_complete(this.buffer, scsi_length);
                 }
-                D.println(1, new StringBuffer().append("SCSI dir=").append(i4).append(" len=").append(scsi_length).toString());
+                D.println(1, "SCSI dir=" + i4 + " len=" + scsi_length);
                 int i6 = 0;
                 do {
                     long currentTimeMillis = System.currentTimeMillis();
@@ -190,9 +187,9 @@ public class SCSIcdrom extends SCSI {
                     } else {
                         i2 = this.media.scsi(this.req, i4, scsi_length, this.buffer, this.sense);
                     }
-                    D.println(1, new StringBuffer().append("ret=").append(i2).append(" sense=").append(D.hex(this.sense[0], 2)).append(" ").append(D.hex(this.sense[1], 2)).append(" ").append(D.hex(this.sense[2], 2)).append(" Time=").append(System.currentTimeMillis() - currentTimeMillis).toString());
+                    D.println(1, "ret=" + i2 + " sense=" + D.hex(this.sense[0], 2) + " " + D.hex(this.sense[1], 2) + " " + D.hex(this.sense[2], 2) + " Time=" + (System.currentTimeMillis() - currentTimeMillis));
                     if (i5 == 90) {
-                        D.println(1, new StringBuffer().append("media type: ").append(D.hex(this.buffer[3], 2)).toString());
+                        D.println(1, "media type: " + D.hex(this.buffer[3], 2));
                         this.reply.setmedia(this.buffer[3]);
                     }
                     if (i5 == 67) {
@@ -224,14 +221,14 @@ public class SCSIcdrom extends SCSI {
                 } while (i6 < this.retrycount);
                 i = i2;
                 if (i < 0 || i > B16) {
-                    D.println(0, new StringBuffer().append("AIEE! len out of bounds: ").append(i).append(", cmd: ").append(D.hex(i5, 2)).append("\n").toString());
+                    D.println(0, "AIEE! len out of bounds: " + i + ", cmd: " + D.hex(i5, 2) + "\n");
                     i = 0;
                     this.reply.set(5, 32, 0, 0);
                 } else {
                     this.reply.set(this.sense[0], this.sense[1], this.sense[2], i);
                 }
             } else {
-                D.println(0, new StringBuffer().append("AIEE! Unhandled command").append(D.hex(this.req[0], 2)).append("\n").toString());
+                D.println(0, "AIEE! Unhandled command" + D.hex(this.req[0], 2) + "\n");
                 this.reply.set(5, 32, 0, 0);
                 i = 0;
             }
@@ -242,7 +239,7 @@ public class SCSIcdrom extends SCSI {
             this.out.flush();
             return true;
         }
-        new VErrorDialog(new StringBuffer().append("Could not open CDROM (").append(this.media.dio.sysError(-open)).append(")").toString(), false);
-        throw new IOException(new StringBuffer().append("Couldn't open cdrom ").append(open).toString());
+        new VErrorDialog("Could not open CDROM (" + this.media.dio.sysError(-open) + ")", false);
+        throw new IOException("Couldn't open cdrom " + open);
     }
 }

@@ -52,7 +52,7 @@ public class OkCancelDialog extends JDialog implements ActionListener, WindowLis
         gridBagConstraints.gridy = 0;
         add(this.mainPanel, gridBagConstraints);
         JPanel jPanel = new JPanel();
-        jPanel.setLayout(new FlowLayout(2));
+        jPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
         jPanel.add(this.ok);
         jPanel.add(this.cancel);
         gridBagConstraints.fill = 0;
@@ -64,7 +64,7 @@ public class OkCancelDialog extends JDialog implements ActionListener, WindowLis
         addWindowListener(this);
         setSize(this.mainPanel.getPreferredSize().width + 40, this.txt.getPreferredSize().height + 100);
         setResizable(false);
-        setLocationRelativeTo((Component) null);
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 

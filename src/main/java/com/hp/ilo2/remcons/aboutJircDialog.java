@@ -49,7 +49,7 @@ public class aboutJircDialog extends JDialog implements ActionListener, WindowLi
         gridBagConstraints.gridy = 2;
         this.mainPanel.add(this.txt3, gridBagConstraints);
         JPanel jPanel = new JPanel();
-        jPanel.setLayout(new FlowLayout(2));
+        jPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
         jPanel.add(this.close);
         setLayout(new GridBagLayout());
         GridBagConstraints gridBagConstraints2 = new GridBagConstraints();
@@ -64,7 +64,7 @@ public class aboutJircDialog extends JDialog implements ActionListener, WindowLi
         setSize(this.mainPanel.getPreferredSize().width + 40, this.mainPanel.getPreferredSize().height + 100);
         addWindowListener(this);
         setResizable(false);
-        setLocationRelativeTo((Component) null);
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 

@@ -1,6 +1,7 @@
 package com.hp.ilo2.remcons;
 
 import com.hp.ilo2.intgapp.locinfo;
+
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -26,23 +27,13 @@ public class VSeizeWaitDialog extends JDialog implements ActionListener {
     byte userInput;
     remcons remconsObj;
     private Timer szWaitTimer;
-    private int szWaitTimerTick;
+    private final int szWaitTimerTick;
     String susr;
     String saddr;
     int sflag;
 
-    public String getLocalString(int i) {
-        String str = "";
-        try {
-            str = this.remconsObj.ParentApp.locinfoObj.getLocString(i);
-        } catch (Exception e) {
-            System.out.println(new StringBuffer().append("VSeizeWaitDialog:getLocalString").append(e.getMessage()).toString());
-        }
-        return str;
-    }
-
     public VSeizeWaitDialog(remcons remconsVar, String str, String str2, int i) {
-        super(null == remconsVar.ParentApp.dispFrame ? new JFrame() : remconsVar.ParentApp.dispFrame, remconsVar.getLocalString(locinfo.STATUSSTR_3112), true);
+        super(null == remconsVar.ParentApp.dispFrame ? new JFrame() : remconsVar.ParentApp.dispFrame, locinfo.STATUSSTR_3112, true);
         this.szWaitTimerTick = 1000;
         this.remconsObj = remconsVar;
         this.susr = str;
@@ -52,14 +43,14 @@ public class VSeizeWaitDialog extends JDialog implements ActionListener {
     }
 
     protected void ui_init(JFrame jFrame) {
-        this.txt = new JLabel(new StringBuffer().append("<html>").append(getLocalString(locinfo.DIALOGSTR_2048)).append(" ").append(this.susr).append(" ").append(getLocalString(locinfo.DIALOGSTR_2049)).append(" ").append(this.saddr).append(" ").append(getLocalString(locinfo.DIALOGSTR_205a)).append("<br><br>").append(getLocalString(locinfo.DIALOGSTR_205b)).append(this.sflag).append(getLocalString(locinfo.DIALOGSTR_205c)).append("</html>").toString());
+        this.txt = new JLabel("<html>" + locinfo.DIALOGSTR_2048 + " " + this.susr + " " + locinfo.DIALOGSTR_2049 + " " + this.saddr + " " + locinfo.DIALOGSTR_205a + "<br><br>" + locinfo.DIALOGSTR_205b + this.sflag + locinfo.DIALOGSTR_205c + "</html>");
         this.mainPanel = new JPanel();
         this.mainPanel.setBorder(BorderFactory.createEtchedBorder(0));
         this.mainPanel.add(this.txt);
         this.mainPanel.setPreferredSize(this.mainPanel.getPreferredSize());
-        this.seize = new JButton(getLocalString(locinfo.DIALOGSTR_205d));
+        this.seize = new JButton(locinfo.DIALOGSTR_205d);
         this.seize.addActionListener(this);
-        this.cancel = new JButton(getLocalString(locinfo.DIALOGSTR_205e));
+        this.cancel = new JButton(locinfo.DIALOGSTR_205e);
         this.cancel.addActionListener(this);
         GridBagLayout gridBagLayout = new GridBagLayout();
         GridBagConstraints gridBagConstraints = new GridBagConstraints();
@@ -70,7 +61,7 @@ public class VSeizeWaitDialog extends JDialog implements ActionListener {
         gridBagConstraints.gridy = 0;
         add(this.mainPanel, gridBagConstraints);
         JPanel jPanel = new JPanel();
-        jPanel.setLayout(new FlowLayout(2));
+        jPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
         jPanel.add(this.cancel);
         jPanel.add(this.seize);
         gridBagConstraints.fill = 0;
@@ -85,7 +76,7 @@ public class VSeizeWaitDialog extends JDialog implements ActionListener {
         System.out.println("seize wait timer started...");
         setSize(this.mainPanel.getPreferredSize().width + 40, this.mainPanel.getPreferredSize().height + 100);
         setResizable(false);
-        setLocationRelativeTo((Component) null);
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 
@@ -122,9 +113,8 @@ public class VSeizeWaitDialog extends JDialog implements ActionListener {
         }
     }
 
-    
-    
-    public class szWaitTimerListener implements TimerListener {
+
+    public static class szWaitTimerListener implements TimerListener {
         private final VSeizeWaitDialog this$0;
 
         szWaitTimerListener(VSeizeWaitDialog vSeizeWaitDialog) {
@@ -136,7 +126,7 @@ public class VSeizeWaitDialog extends JDialog implements ActionListener {
             VSeizeWaitDialog vSeizeWaitDialog = (VSeizeWaitDialog) obj;
             vSeizeWaitDialog.sflag--;
             if (vSeizeWaitDialog.sflag > 0) {
-                this.this$0.txt.setText(new StringBuffer().append("<html>").append(this.this$0.getLocalString(locinfo.DIALOGSTR_2048)).append(" ").append(vSeizeWaitDialog.susr).append(" ").append(this.this$0.getLocalString(locinfo.DIALOGSTR_2049)).append(" ").append(vSeizeWaitDialog.saddr).append(" ").append(this.this$0.getLocalString(locinfo.DIALOGSTR_205a)).append("<br><br>").append(this.this$0.getLocalString(locinfo.DIALOGSTR_205b)).append(vSeizeWaitDialog.sflag).append(" ").append(this.this$0.getLocalString(locinfo.DIALOGSTR_205c)).append("</html>").toString());
+                this.this$0.txt.setText("<html>" + locinfo.DIALOGSTR_2048 + " " + vSeizeWaitDialog.susr + " " + locinfo.DIALOGSTR_2049 + " " + vSeizeWaitDialog.saddr + " " + locinfo.DIALOGSTR_205a + "<br><br>" + locinfo.DIALOGSTR_205b + vSeizeWaitDialog.sflag + " " + locinfo.DIALOGSTR_205c + "</html>");
             } else {
                 vSeizeWaitDialog.actionPerformed(new ActionEvent(vSeizeWaitDialog.seize, 1, "vobjyes"));
             }

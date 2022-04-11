@@ -27,15 +27,15 @@ public class SCSIFloppy extends SCSI {
 
     public SCSIFloppy(Socket socket, InputStream inputStream, BufferedOutputStream bufferedOutputStream, String str, int i, virtdevs virtdevsVar) throws IOException {
         super(socket, inputStream, bufferedOutputStream, str, i);
-        D.print(1, new StringBuffer().append("open returns ").append(this.media.open(str, i)).toString());
+        D.print(1, "open returns " + this.media.open(str, i));
         this.v = virtdevsVar;
     }
 
     @Override // com.hp.ilo2.virtdevs.SCSI
     public boolean process() throws IOException {
         this.date.setTime(System.currentTimeMillis());
-        D.println(1, new StringBuffer().append("Date = ").append(this.date).toString());
-        D.println(1, new StringBuffer().append("Device: ").append(this.selectedDevice).append(" (").append(this.targetIsDevice).append(")").toString());
+        D.println(1, "Date = " + this.date);
+        D.println(1, "Device: " + this.selectedDevice + " (" + this.targetIsDevice + ")");
         read_command(this.req, 12);
         D.print(1, "SCSI Request: ");
         D.hexdump(1, this.req, 12);
@@ -48,9 +48,9 @@ public class SCSIFloppy extends SCSI {
             this.media_sz = this.media.size();
             this.fdd_state = 0;
         }
-        D.println(1, new StringBuffer().append("retval=").append(this.media_sz).append(" type=").append(this.media.type()).append(" physdrive=").append(this.media.dio != null ? this.media.dio.PhysicalDevice : -1).toString());
+        D.println(1, "retval=" + this.media_sz + " type=" + this.media.type() + " physdrive=" + (this.media.dio != null ? this.media.dio.PhysicalDevice : -1));
         if (this.media_sz == -6) {
-            new VErrorDialog(this.v.ParentApp.dispFrame, new StringBuffer().append(this.selectedDevice).append(" ").append(this.v.ParentApp.remconsObj.getLocalString(locinfo.DIALOGSTR_2060)).append("\n\n").append(this.v.ParentApp.remconsObj.getLocalString(locinfo.DIALOGSTR_202f)).toString());
+            new VErrorDialog(this.v.ParentApp.dispFrame, this.selectedDevice + " " + locinfo.DIALOGSTR_2060 + "\n\n" + locinfo.DIALOGSTR_202f);
             return false;
         }
         if (this.media_sz <= 0) {
@@ -98,7 +98,7 @@ public class SCSIFloppy extends SCSI {
                 client_write(this.req);
                 return true;
             default:
-                D.println(0, new StringBuffer().append("Unknown request:cmd = ").append(Integer.toHexString(this.req[0])).toString());
+                D.println(0, "Unknown request:cmd = " + Integer.toHexString(this.req[0]));
                 return true;
         }
     }
@@ -127,7 +127,7 @@ public class SCSIFloppy extends SCSI {
             this.rcs_resp[4] = (byte) ((size >> 24) & 255);
             this.rcs_resp[5] = (byte) ((size >> 16) & 255);
             this.rcs_resp[6] = (byte) ((size >> 8) & 255);
-            this.rcs_resp[7] = (byte) ((size >> 0) & 255);
+            this.rcs_resp[7] = (byte) ((size) & 255);
             this.rcs_resp[10] = 2;
             this.rcs_resp[11] = 0;
         } else {
@@ -135,7 +135,7 @@ public class SCSIFloppy extends SCSI {
             this.rcs_resp[4] = (byte) ((size2 >> 24) & 255);
             this.rcs_resp[5] = (byte) ((size2 >> 16) & 255);
             this.rcs_resp[6] = (byte) ((size2 >> 8) & 255);
-            this.rcs_resp[7] = (byte) ((size2 >> 0) & 255);
+            this.rcs_resp[7] = (byte) ((size2) & 255);
             this.rcs_resp[10] = (byte) ((this.media.dio.BytesPerSec >> 8) & telnet.TELNET_IAC);
             this.rcs_resp[11] = (byte) (this.media.dio.BytesPerSec & telnet.TELNET_IAC);
         }
@@ -150,9 +150,9 @@ public class SCSIFloppy extends SCSI {
     }
 
     void client_read(byte[] bArr) throws IOException {
-        long mk_int32 = SCSI.mk_int32(bArr, 2) * 512;
+        long mk_int32 = SCSI.mk_int32(bArr, 2) * 512L;
         int mk_int322 = (bArr[0] == 168 ? SCSI.mk_int32(bArr, 6) : SCSI.mk_int16(bArr, 7)) * 512;
-        D.println(3, new StringBuffer().append("FDIO.client_read:Client read ").append(mk_int32).append(", len=").append(mk_int322).toString());
+        D.println(3, "FDIO.client_read:Client read " + mk_int32 + ", len=" + mk_int322);
         if (mk_int32 < 0 || mk_int32 >= this.media_sz) {
             this.reply.set(5, 33, 0, 0);
             mk_int322 = 0;
@@ -161,7 +161,7 @@ public class SCSIFloppy extends SCSI {
                 this.media.read(mk_int32, mk_int322, this.buffer);
                 this.reply.set(0, 0, 0, mk_int322);
             } catch (IOException e) {
-                D.println(0, new StringBuffer().append("Exception during read: ").append(e).toString());
+                D.println(0, "Exception during read: " + e);
                 this.reply.set(3, 16, 0, 0);
                 mk_int322 = 0;
             }
@@ -176,9 +176,9 @@ public class SCSIFloppy extends SCSI {
 
     void client_write(byte[] bArr) throws IOException {
         boolean z = bArr[0] == 170;
-        long mk_int32 = SCSI.mk_int32(bArr, 2) * 512;
+        long mk_int32 = SCSI.mk_int32(bArr, 2) * 512L;
         int mk_int322 = (z ? SCSI.mk_int32(bArr, 6) : SCSI.mk_int16(bArr, 7)) * 512;
-        D.println(3, new StringBuffer().append("FDIO.client_write:lba = ").append(mk_int32).append(", length = ").append(mk_int322).toString());
+        D.println(3, "FDIO.client_write:lba = " + mk_int32 + ", length = " + mk_int322);
         read_complete(this.buffer, mk_int322);
         if (this.writeprot) {
             this.reply.set(7, 39, 0, 0);
@@ -189,7 +189,7 @@ public class SCSIFloppy extends SCSI {
                 this.media.write(mk_int32, mk_int322, this.buffer);
                 this.reply.set(0, 0, 0, 0);
             } catch (IOException e) {
-                D.println(0, new StringBuffer().append("Exception during write: ").append(e).toString());
+                D.println(0, "Exception during write: " + e);
                 this.reply.set(3, 16, 0, 0);
             }
         }
@@ -280,14 +280,14 @@ public class SCSIFloppy extends SCSI {
                 bArr[0] = (byte) ((size >> 24) & 255);
                 bArr[1] = (byte) ((size >> 16) & 255);
                 bArr[2] = (byte) ((size >> 8) & 255);
-                bArr[3] = (byte) ((size >> 0) & 255);
+                bArr[3] = (byte) ((size) & 255);
                 bArr[6] = 2;
             } else {
                 long size2 = (this.media.size() / this.media.dio.BytesPerSec) - 1;
                 bArr[0] = (byte) ((size2 >> 24) & 255);
                 bArr[1] = (byte) ((size2 >> 16) & 255);
                 bArr[2] = (byte) ((size2 >> 8) & 255);
-                bArr[3] = (byte) ((size2 >> 0) & 255);
+                bArr[3] = (byte) ((size2) & 255);
                 bArr[6] = (byte) ((this.media.dio.BytesPerSec >> 8) & telnet.TELNET_IAC);
                 bArr[7] = (byte) (this.media.dio.BytesPerSec & telnet.TELNET_IAC);
             }

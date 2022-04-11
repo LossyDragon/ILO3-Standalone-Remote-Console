@@ -73,10 +73,10 @@ public class Connection implements Runnable, ActionListener {
         this.out.write(bArr);
         this.out.flush();
         this.in.read(bArr, 0, 4);
-        D.println(3, new StringBuffer().append("Hello response0: ").append(D.hex(bArr[0], 2)).toString());
-        D.println(3, new StringBuffer().append("Hello response1: ").append(D.hex(bArr[1], 2)).toString());
+        D.println(3, "Hello response0: " + D.hex(bArr[0], 2));
+        D.println(3, "Hello response1: " + D.hex(bArr[1], 2));
         if (bArr[0] == 32 && bArr[1] == 0) {
-            D.println(1, new StringBuffer().append("Connected.  Protocol version = ").append(bArr[3] & 255).append(".").append(bArr[2] & 255).toString());
+            D.println(1, "Connected.  Protocol version = " + (bArr[3] & 255) + "." + (bArr[2] & 255));
             return 0;
         }
         D.println(0, "Unexpected Hello Response!");

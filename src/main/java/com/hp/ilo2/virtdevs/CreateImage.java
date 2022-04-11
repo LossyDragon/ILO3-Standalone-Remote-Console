@@ -2,6 +2,7 @@ package com.hp.ilo2.virtdevs;
 
 import com.hp.ilo2.intgapp.locinfo;
 import com.hp.ilo2.remcons.telnet;
+
 import java.awt.Checkbox;
 import java.awt.CheckboxGroup;
 import java.awt.Choice;
@@ -41,7 +42,7 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
     String[] dev;
     int[] devt;
     boolean defaultRemovable;
-    private JLabel statLabel;
+    private final JLabel statLabel;
     JPanel p;
     virtdevs virtdevsObj;
     boolean canceled = false;
@@ -49,26 +50,16 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
     int drvCboxChecked = 0;
     int targetIsDevice = 1;
     int targetIsCdrom = 0;
-    JButton dimg = new JButton(getLocalString(locinfo.STATUSSTR_3107));
+    JButton dimg = new JButton(locinfo.STATUSSTR_3107);
     CheckboxGroup drvGroup = new CheckboxGroup();
-    Checkbox drvSel = new Checkbox(getLocalString(locinfo.STATUSSTR_3103), this.drvGroup, true);
-    Checkbox drvPath = new Checkbox(getLocalString(locinfo.STATUSSTR_3104), this.drvGroup, false);
+    Checkbox drvSel = new Checkbox(locinfo.STATUSSTR_3103, this.drvGroup, true);
+    Checkbox drvPath = new Checkbox(locinfo.STATUSSTR_3104, this.drvGroup, false);
     JTextField DriveFile = new JTextField();
-    JButton dbrowse = new JButton(getLocalString(locinfo.STATUSSTR_3109));
+    JButton dbrowse = new JButton(locinfo.STATUSSTR_3109);
     Choice fdDrive = new Choice();
 
-    public String getLocalString(int i) {
-        String str = "";
-        try {
-            str = this.virtdevsObj.ParentApp.locinfoObj.getLocString(i);
-        } catch (Exception e) {
-            System.out.println(new StringBuffer().append("CreateImage:getLocalString").append(e.getMessage()).toString());
-        }
-        return str;
-    }
-
     public CreateImage(virtdevs virtdevsVar) {
-        super(virtdevsVar.parent, virtdevsVar.getLocalString(locinfo.STATUSSTR_3100));
+        super(virtdevsVar.parent, locinfo.STATUSSTR_3100);
         this.diskimage = true;
         this.iscdrom = false;
         this.defaultRemovable = false;
@@ -87,7 +78,7 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         setLayout(new GridBagLayout());
         this.dimg.addActionListener(this);
         JPanel jPanel = new JPanel();
-        jPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), getLocalString(locinfo.STATUSSTR_3121)));
+        jPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), locinfo.STATUSSTR_3121));
         jPanel.add(this.dimg);
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
@@ -119,11 +110,11 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
             }
         }
         if (z) {
-            this.fdDrive.add(getLocalString(locinfo.STATUSSTR_3106));
+            this.fdDrive.add(locinfo.STATUSSTR_3106);
         }
         this.fdDrive.addItemListener(this);
         JPanel jPanel2 = new JPanel(new GridBagLayout());
-        jPanel2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), getLocalString(locinfo.STATUSSTR_3122)));
+        jPanel2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), locinfo.STATUSSTR_3122));
         GridBagConstraints gridBagConstraints2 = new GridBagConstraints();
         gridBagConstraints2.gridx = 0;
         gridBagConstraints2.gridy = 0;
@@ -147,12 +138,12 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         gridBagConstraints.gridy = 1;
         add(jPanel2, gridBagConstraints);
         this.ImgFile = new JTextField();
-        this.ImgFile.setSize((int) telnet.TELNET_SB, 30);
+        this.ImgFile.setSize(telnet.TELNET_SB, 30);
         this.ImgFile.addActionListener(this);
-        this.browse = new JButton(getLocalString(locinfo.STATUSSTR_3109));
+        this.browse = new JButton(locinfo.STATUSSTR_3109);
         this.browse.addActionListener(this);
         JPanel jPanel3 = new JPanel(new GridBagLayout());
-        jPanel3.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), getLocalString(locinfo.STATUSSTR_3123)));
+        jPanel3.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), locinfo.STATUSSTR_3123));
         GridBagConstraints gridBagConstraints3 = new GridBagConstraints();
         gridBagConstraints3.gridx = 1;
         gridBagConstraints3.gridy = 0;
@@ -166,10 +157,10 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         add(jPanel3, gridBagConstraints);
         this.progress = new VProgressBar(350, 25, Color.lightGray, Color.blue, Color.white);
         JPanel jPanel4 = new JPanel(new GridBagLayout());
-        jPanel4.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), getLocalString(locinfo.STATUSSTR_3124)));
+        jPanel4.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(1), locinfo.STATUSSTR_3124));
         GridBagConstraints gridBagConstraints4 = new GridBagConstraints();
         this.statLabel = new JLabel(" ");
-        this.statLabel.setFont(new Font("Arial", 1, 12));
+        this.statLabel.setFont(new Font("Arial", Font.BOLD, 12));
         gridBagConstraints4.gridx = 0;
         gridBagConstraints4.gridy = 0;
         jPanel4.add(this.statLabel, gridBagConstraints4);
@@ -179,27 +170,27 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 3;
         add(jPanel4, gridBagConstraints);
-        this.create = new JButton(getLocalString(locinfo.STATUSSTR_310a));
+        this.create = new JButton(locinfo.STATUSSTR_310a);
         this.create.setEnabled(false);
         this.create.addActionListener(this);
-        this.cancel = new JButton(getLocalString(locinfo.STATUSSTR_310b));
+        this.cancel = new JButton(locinfo.STATUSSTR_310b);
         this.cancel.addActionListener(this);
         this.p = new JPanel();
-        this.p.setLayout(new FlowLayout(2));
+        this.p.setLayout(new FlowLayout(FlowLayout.RIGHT));
         this.p.add(this.create);
         this.p.add(this.cancel);
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 4;
         add(this.p, gridBagConstraints);
         if (z2) {
-            this.dimg.setLabel(getLocalString(locinfo.STATUSSTR_3107));
+            this.dimg.setLabel(locinfo.STATUSSTR_3107);
             this.diskimage = true;
             this.dimg.setEnabled(false);
         } else {
             this.dimg.setEnabled(true);
         }
         this.dimg.repaint();
-        setLocationRelativeTo((Component) null);
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 
@@ -216,27 +207,19 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         if (source == this.browse) {
             this.statLabel.setText(" ");
             this.progress.updateBar(0.0f);
-            String string = new VFileDialog(getLocalString(locinfo.STATUSSTR_310c), null).getString();
+            String string = new VFileDialog(locinfo.STATUSSTR_310c, null).getString();
             if (string != null) {
                 this.ImgFile.setText(string);
-                if ((0 != this.drvCboxChecked || this.fdDrive.getSelectedItem().equals(getLocalString(locinfo.STATUSSTR_3106))) && (1 != this.drvCboxChecked || this.DriveFile.getText().equals(""))) {
-                    this.create.setEnabled(false);
-                } else {
-                    this.create.setEnabled(true);
-                }
+                this.create.setEnabled((0 == this.drvCboxChecked && !this.fdDrive.getSelectedItem().equals(locinfo.STATUSSTR_3106)) || (1 == this.drvCboxChecked && !this.DriveFile.getText().equals("")));
             }
         }
         if (source == this.dbrowse) {
             this.statLabel.setText(" ");
             this.progress.updateBar(0.0f);
-            String string2 = new VFileDialog(getLocalString(locinfo.STATUSSTR_310d), null).getString();
+            String string2 = new VFileDialog(locinfo.STATUSSTR_310d, null).getString();
             if (string2 != null) {
                 this.DriveFile.setText(string2);
-                if (!this.ImgFile.getText().equals("")) {
-                    this.create.setEnabled(true);
-                } else {
-                    this.create.setEnabled(false);
-                }
+                this.create.setEnabled(!this.ImgFile.getText().equals(""));
             }
         }
         if (source == this.create) {
@@ -251,9 +234,9 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
             this.ImgFile.setEnabled(false);
             this.dimg.setEnabled(false);
             if (this.diskimage) {
-                this.statLabel.setText(getLocalString(locinfo.STATUSSTR_310e));
+                this.statLabel.setText(locinfo.STATUSSTR_310e);
             } else {
-                this.statLabel.setText(getLocalString(locinfo.STATUSSTR_310f));
+                this.statLabel.setText(locinfo.STATUSSTR_310f);
             }
             new Thread(this).start();
         }
@@ -262,9 +245,9 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
             this.progress.updateBar(0.0f);
             this.diskimage = !this.diskimage;
             if (this.diskimage) {
-                this.dimg.setLabel(getLocalString(locinfo.STATUSSTR_3107));
+                this.dimg.setLabel(locinfo.STATUSSTR_3107);
             } else {
-                this.dimg.setLabel(getLocalString(locinfo.STATUSSTR_3108));
+                this.dimg.setLabel(locinfo.STATUSSTR_3108);
             }
             this.dimg.repaint();
         }
@@ -278,19 +261,11 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         if (source == this.ImgFile) {
             this.statLabel.setText(" ");
             this.progress.updateBar(0.0f);
-            if (this.ImgFile.getText().equals("") || ((0 != this.drvCboxChecked || this.fdDrive.getSelectedItem().equals(getLocalString(locinfo.STATUSSTR_3106))) && (1 != this.drvCboxChecked || this.DriveFile.getText().equals("")))) {
-                this.create.setEnabled(false);
-            } else {
-                this.create.setEnabled(true);
-            }
+            this.create.setEnabled(!this.ImgFile.getText().equals("") && ((0 == this.drvCboxChecked && !this.fdDrive.getSelectedItem().equals(locinfo.STATUSSTR_3106)) || (1 == this.drvCboxChecked && !this.DriveFile.getText().equals(""))));
         } else if (source == this.DriveFile) {
             this.statLabel.setText(" ");
             this.progress.updateBar(0.0f);
-            if (this.ImgFile.getText().equals("") || this.DriveFile.getText().equals("")) {
-                this.create.setEnabled(false);
-            } else {
-                this.create.setEnabled(true);
-            }
+            this.create.setEnabled(!this.ImgFile.getText().equals("") && !this.DriveFile.getText().equals(""));
         }
     }
 
@@ -310,18 +285,14 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
                 this.create.setEnabled(false);
             }
             if (this.iscdrom) {
-                this.dimg.setLabel(getLocalString(locinfo.STATUSSTR_3107));
+                this.dimg.setLabel(locinfo.STATUSSTR_3107);
                 this.diskimage = true;
                 this.dimg.setEnabled(false);
             } else {
                 this.dimg.setEnabled(true);
             }
             this.dimg.repaint();
-            if (this.ImgFile.getText().equals("") || this.fdDrive.getSelectedItem().equals(getLocalString(locinfo.STATUSSTR_3106))) {
-                this.create.setEnabled(false);
-            } else {
-                this.create.setEnabled(true);
-            }
+            this.create.setEnabled(!this.ImgFile.getText().equals("") && !this.fdDrive.getSelectedItem().equals(locinfo.STATUSSTR_3106));
         }
         if (itemEvent.getSource() == this.drvSel) {
             this.DriveFile.setEditable(false);
@@ -341,32 +312,24 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
                 this.iscdrom = false;
             }
             if (this.iscdrom) {
-                this.dimg.setLabel(getLocalString(locinfo.STATUSSTR_3107));
+                this.dimg.setLabel(locinfo.STATUSSTR_3107);
                 this.diskimage = true;
                 this.dimg.setEnabled(false);
             } else {
                 this.dimg.setEnabled(true);
             }
             this.dimg.repaint();
-            if (this.fdDrive.getSelectedItem().equals(getLocalString(locinfo.STATUSSTR_3106)) || this.ImgFile.getText().equals("")) {
-                this.create.setEnabled(false);
-            } else {
-                this.create.setEnabled(true);
-            }
+            this.create.setEnabled(!this.fdDrive.getSelectedItem().equals(locinfo.STATUSSTR_3106) && !this.ImgFile.getText().equals(""));
         } else if (itemEvent.getSource() == this.drvPath) {
             this.DriveFile.setEditable(true);
             this.dbrowse.setEnabled(true);
             this.fdDrive.setEnabled(false);
             this.drvCboxChecked = 1;
-            this.dimg.setLabel(getLocalString(locinfo.STATUSSTR_3107));
+            this.dimg.setLabel(locinfo.STATUSSTR_3107);
             this.diskimage = true;
             this.dimg.setEnabled(false);
             this.dimg.repaint();
-            if (this.DriveFile.getText().equals("") || this.ImgFile.getText().equals("")) {
-                this.create.setEnabled(false);
-            } else {
-                this.create.setEnabled(true);
-            }
+            this.create.setEnabled(!this.DriveFile.getText().equals("") && !this.ImgFile.getText().equals(""));
         }
     }
 
@@ -394,7 +357,7 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         byte[] byArray3 = new byte[3];
         long l = mediaAccess.scsi(byArray, 1, 8, byArray2, byArray3);
         if (l >= 0L) {
-            l = (long)SCSI.mk_int32(byArray2, 0) * (long)SCSI.mk_int32(byArray2, 4);
+            l = (long) SCSI.mk_int32(byArray2, 0) * (long) SCSI.mk_int32(byArray2, 4);
         }
         return l;
     }
@@ -402,10 +365,10 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
     public void cdrom_read(MediaAccess mediaAccess, long j, int i, byte[] bArr) throws IOException {
         byte[] bArr2 = new byte[3];
         int i2 = (int) (j / 2048);
-        if (mediaAccess.scsi(new byte[]{40, 0, (byte) ((i2 >> 24) & telnet.TELNET_IAC), (byte) ((i2 >> 16) & telnet.TELNET_IAC), (byte) ((i2 >> 8) & telnet.TELNET_IAC), (byte) ((i2 >> 0) & telnet.TELNET_IAC), 0, (byte) (((i / 2048) >> 8) & telnet.TELNET_IAC), (byte) (((i / 2048) >> 0) & telnet.TELNET_IAC), 0, 0, 0}, 1, i, bArr, bArr2) == -1) {
+        if (mediaAccess.scsi(new byte[]{40, 0, (byte) ((i2 >> 24) & telnet.TELNET_IAC), (byte) ((i2 >> 16) & telnet.TELNET_IAC), (byte) ((i2 >> 8) & telnet.TELNET_IAC), (byte) ((i2) & telnet.TELNET_IAC), 0, (byte) (((i / 2048) >> 8) & telnet.TELNET_IAC), (byte) (((i / 2048)) & telnet.TELNET_IAC), 0, 0, 0}, 1, i, bArr, bArr2) == -1) {
             throw new IOException("Error reading CD-ROM.");
         } else if (bArr2[0] != 0) {
-            throw new IOException(new StringBuffer().append("Error reading CD-ROM.  Sense data (").append(D.hex(bArr2[0], 1)).append("/").append(D.hex(bArr2[1], 2)).append("/").append(D.hex(bArr2[2], 2)).append(")").toString());
+            throw new IOException("Error reading CD-ROM.  Sense data (" + D.hex(bArr2[0], 1) + "/" + D.hex(bArr2[1], 2) + "/" + D.hex(bArr2[2], 2) + ")");
         }
     }
 
@@ -414,7 +377,7 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         byte[] bArr3 = new byte[12];
         int i2 = 0;
         int i3 = (int) (j / 2048);
-        byte[] bArr4 = {40, 0, (byte) ((i3 >> 24) & telnet.TELNET_IAC), (byte) ((i3 >> 16) & telnet.TELNET_IAC), (byte) ((i3 >> 8) & telnet.TELNET_IAC), (byte) ((i3 >> 0) & telnet.TELNET_IAC), 0, (byte) (((i / 2048) >> 8) & telnet.TELNET_IAC), (byte) (((i / 2048) >> 0) & telnet.TELNET_IAC), 0, 0, 0};
+        byte[] bArr4 = {40, 0, (byte) ((i3 >> 24) & telnet.TELNET_IAC), (byte) ((i3 >> 16) & telnet.TELNET_IAC), (byte) ((i3 >> 8) & telnet.TELNET_IAC), (byte) ((i3) & telnet.TELNET_IAC), 0, (byte) (((i / 2048) >> 8) & telnet.TELNET_IAC), (byte) (((i / 2048)) & telnet.TELNET_IAC), 0, 0, 0};
         do {
             System.currentTimeMillis();
             int scsi = mediaAccess.scsi(bArr4, 1, i, bArr, bArr2);
@@ -461,7 +424,7 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         }
     }
 
-    @Override // java.lang.Runnable
+    @Override
     public void run() {
         int n = 0;
         long l = 0L;
@@ -489,7 +452,7 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
                 n2 = mediaAccess.open(this.fdDrive.getSelectedItem(), 1);
                 if (n2 < 0) {
                     bl = true;
-                    new VErrorDialog(this.getLocalString(8247) + " (" + mediaAccess.dio.sysError(-n2) + ")", false);
+                    new VErrorDialog(locinfo.DIALOGSTR_2037 + " (" + mediaAccess.dio.sysError(-n2) + ")", false);
                     throw new IOException("Couldn't open cdrom " + n2);
                 }
                 this.cdrom_testunitready(mediaAccess);
@@ -528,16 +491,15 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
                     System.out.println("CrtDev actual Dev size" + l + " " + n);
                 } else {
                     l = mediaAccess.size();
-                    n = (int)(l / 512L);
+                    n = (int) (l / 512L);
                     System.out.println("CrtFile static Dev size" + l + " " + n);
                 }
             }
-        }
-        catch (IOException iOException) {
+        } catch (IOException iOException) {
             System.out.println("Exception opening media access");
         }
         if (!this.diskimage && mediaAccess.wp()) {
-            new VErrorDialog(this.frame, this.getLocalString(8248) + " " + this.fdDrive.getSelectedItem() + this.getLocalString(8249));
+            new VErrorDialog(this.frame, locinfo.DIALOGSTR_2038 + " " + this.fdDrive.getSelectedItem() + locinfo.DIALOGSTR_2039);
             bl = true;
             this.create.setEnabled(true);
             this.browse.setEnabled(true);
@@ -552,16 +514,15 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
             this.dimg.setEnabled(true);
             try {
                 mediaAccess.close();
-            }
-            catch (IOException iOException) {
+            } catch (IOException iOException) {
                 // empty catch block
             }
             return;
         }
-        this.setCursor(Cursor.getPredefinedCursor(3));
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         long l2 = l;
         if (n == 0 || l2 == 0L) {
-            String string2 = this.getLocalString(8250) + " " + this.getLocalString(8241);
+            String string2 = locinfo.DIALOGSTR_203a + " " + locinfo.DIALOGSTR_2031;
             new VErrorDialog(this.frame, string2);
             bl = true;
             n = 0;
@@ -569,9 +530,8 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         } else {
             try {
                 mediaAccess2.open(string, this.diskimage ? 2 : 0);
-            }
-            catch (IOException iOException) {
-                new VErrorDialog(this.frame, this.getLocalString(8251) + string + ".");
+            } catch (IOException iOException) {
+                new VErrorDialog(this.frame, locinfo.DIALOGSTR_203b + string + ".");
             }
         }
         long l3 = 0L;
@@ -580,7 +540,7 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         try {
             while (l2 > 0L && !this.canceled) {
                 int n4;
-                int n5 = n4 = (long)n < l2 ? n : (int)l2;
+                int n5 = n4 = (long) n < l2 ? n : (int) l2;
                 if (this.diskimage) {
                     if (this.iscdrom) {
                         this.cdrom_read_retry(mediaAccess, l3, n4, byArray);
@@ -592,36 +552,34 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
                     mediaAccess2.read(l3, n4, byArray);
                     mediaAccess.write(l3, n4, byArray);
                 }
-                l3 += (long)n4;
-                l2 -= (long)n4;
-                if (!this.diskimage && (double)((float)l3 / (float)l) >= 0.95) {
+                l3 += n4;
+                l2 -= n4;
+                if (!this.diskimage && (double) ((float) l3 / (float) l) >= 0.95) {
                     this.progress.updateBar(0.95f);
                     continue;
                 }
-                this.progress.updateBar((float)l3 / (float)l);
+                this.progress.updateBar((float) l3 / (float) l);
             }
-        }
-        catch (IOException iOException) {
+        } catch (IOException iOException) {
             bl = true;
-            new VErrorDialog(this.frame, this.getLocalString(8252) + (this.diskimage ? this.getLocalString(8253) : this.getLocalString(8254)) + this.getLocalString(8255) + " (" + iOException + ")");
+            new VErrorDialog(this.frame, locinfo.DIALOGSTR_203c + (this.diskimage ? locinfo.DIALOGSTR_203d : locinfo.DIALOGSTR_203e) + locinfo.DIALOGSTR_203f + " (" + iOException + ")");
         }
-        this.setCursor(Cursor.getPredefinedCursor(0));
+        this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         if (!bl) {
             try {
                 mediaAccess.close();
                 mediaAccess2.close();
-            }
-            catch (IOException iOException) {
+            } catch (IOException iOException) {
                 D.println(0, "Closing: " + iOException);
             }
-            this.progress.updateBar((float)l3 / (float)l);
+            this.progress.updateBar((float) l3 / (float) l);
             if (this.diskimage) {
-                this.statLabel.setText(this.getLocalString(12560));
+                this.statLabel.setText(locinfo.STATUSSTR_3110);
             } else {
-                this.statLabel.setText(this.getLocalString(12561));
+                this.statLabel.setText(locinfo.STATUSSTR_3111);
             }
             this.p.remove(this.create);
-            this.cancel.setLabel(this.getLocalString(12566));
+            this.cancel.setLabel(locinfo.STATUSSTR_3116);
         } else {
             this.statLabel.setText(" ");
         }
@@ -635,11 +593,7 @@ public class CreateImage extends JDialog implements ActionListener, WindowListen
         }
         this.ImgFile.setEnabled(true);
         this.DriveFile.setEnabled(true);
-        if (this.iscdrom) {
-            this.dimg.setEnabled(false);
-        } else {
-            this.dimg.setEnabled(true);
-        }
+        this.dimg.setEnabled(!this.iscdrom);
     }
 
     public void windowClosing(WindowEvent windowEvent) {

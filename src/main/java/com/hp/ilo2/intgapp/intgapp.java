@@ -19,83 +19,73 @@ import java.awt.event.WindowEvent;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
-import javax.swing.AbstractButton;
-import javax.swing.ImageIcon;
-import javax.swing.JApplet;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
+import java.util.Objects;
+import javax.swing.*;
 
 import util.Http;
 
 public class intgapp extends JApplet implements Runnable, ActionListener, ItemListener {
 
     /* ILO3RemCon addition */
-    private String hostName;
+    private final String hostName;
 
-    public String optional_features;
-    public JFrame dispFrame;
-    public JPanel mainPanel;
-    JMenuBar mainMenuBar;
+    JCheckBoxMenuItem[] localKbdLayout;
+    JCheckBoxMenuItem[] vdMenuItems;
+    JMenu hlpMenu;
+    JMenu kbAFMenu;
+    JMenu kbCAFMenu;
+    JMenu kbLangMenu;
+    JMenu kbMenu;
     JMenu psMenu;
     JMenu vdMenu;
-    JMenu kbMenu;
-    JMenu kbCAFMenu;
-    JMenu kbAFMenu;
-    JMenu kbLangMenu;
-    JMenu hlpMenu;
-    int vdmenuIndx;
-    int fdMenuItems;
-    int cdMenuItems;
-    private MediaAccess ma;
-    JCheckBoxMenuItem[] vdMenuItems;
-    public JMenuItem vdMenuItemCrImage;
-    JMenuItem momPress;
-    JMenuItem pressHold;
-    JMenuItem powerCycle;
-    JMenuItem sysReset;
-    JMenuItem ctlAltDel;
-    JMenuItem numLock;
+    JMenuBar mainMenuBar;
+    JMenuItem aboutJirc;
     JMenuItem capsLock;
     JMenuItem ctlAltBack;
+    JMenuItem ctlAltDel;
     JMenuItem hotKeys;
-    JMenuItem aboutJirc;
-    JMenuItem[] ctlAltFn;
-    JMenuItem[] AltFn;
-    JCheckBoxMenuItem[] localKbdLayout;
-    JPanel dispStatusBar;
     JMenuItem mdebug1;
     JMenuItem mdebug2;
     JMenuItem mdebug3;
+    JMenuItem momPress;
+    JMenuItem numLock;
+    JMenuItem powerCycle;
+    JMenuItem pressHold;
+    JMenuItem sysReset;
+    JMenuItem[] AltFn;
+    JMenuItem[] ctlAltFn;
+    JPanel dispStatusBar;
     JScrollPane scroller;
+    String rcErrMessage;
+    int cdMenuItems;
+    int fdMenuItems;
+    int vdmenuIndx;
+    private MediaAccess ma;
+    private final int REMCONS_MAX_FN_KEYS = 12;
+    private final int REMCONS_MAX_KBD_LAYOUT = 17;
+    public JFrame dispFrame;
+    public JMenuItem vdMenuItemCrImage;
+    public JPanel mainPanel;
     public String enc_key;
+    public String enclosure;
+    public String ilo_fqdn;
+    public String optional_features;
     public String rc_port;
+    public String server_name;
     public String vm_key;
     public String vm_port;
-    public String server_name;
-    public String ilo_fqdn;
-    public String enclosure;
-    String rcErrMessage;
-    public int dwidth;
-    public int dheight;
-    public int blade = 0;
-    public int bay = 0;
-    public byte[] enc_key_val = new byte[16];
+    public boolean cdSelected = false;
     public boolean exit = false;
     public boolean fdSelected = false;
-    public boolean cdSelected = false;
     public boolean in_enclosure = false;
-    private int REMCONS_MAX_FN_KEYS = 12;
-    private int REMCONS_MAX_KBD_LAYOUT = 17;
-    public virtdevs virtdevsObj = new virtdevs(this);
-    public remcons remconsObj = new remcons(this);
-    public locinfo locinfoObj = new locinfo(this);
+    public byte[] enc_key_val = new byte[16];
+    public int bay = 0;
+    public int blade = 0;
+    public int dheight;
+    public int dwidth;
     public jsonparser jsonObj = new jsonparser(this);
+    public remcons remconsObj = new remcons(this);
+    public virtdevs virtdevsObj = new virtdevs(this);
 
     /* ILO3RemCon addition */
     public intgapp(String hostname) {
@@ -147,31 +137,17 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         }
     }
 
-    public String getLocalString(int i) {
-        String str = "";
-        try {
-            str = this.locinfoObj.getLocString(i);
-        } catch (Exception e) {
-            System.out.println(new StringBuffer().append("remcons:getLocalString").append(e.getMessage()).toString());
-        }
-        return str;
-    }
-
     public void init() {
         System.out.println("Started Retrieving parameters from ILO..");
         String jSONRequest = this.jsonObj.getJSONRequest("rc_info");
         ApplyRcInfoParameters(jSONRequest);
         System.out.println("Completed Retrieving parameters from ILO");
-        boolean initLocStrings = this.locinfoObj.initLocStrings();
         this.virtdevsObj.init();
         this.remconsObj.init();
         ui_init();
         if (null == jSONRequest) {
             System.out.println("Failed to retrive parameters from ILO");
-            new VErrorDialog(this.dispFrame, getLocalString(locinfo.DIALOGSTR_2014), this.rcErrMessage, true);
-            this.dispFrame.setVisible(false);
-        } else if (false == initLocStrings) {
-            new VErrorDialog(this.dispFrame, getLocalString(locinfo.DIALOGSTR_2014), this.locinfoObj.rcErrMessage, true);
+            new VErrorDialog(this.dispFrame, locinfo.DIALOGSTR_2014, this.rcErrMessage, true);
             this.dispFrame.setVisible(false);
         }
     }
@@ -209,7 +185,7 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         this.remconsObj.destroy();
     }
 
-    @Override // java.lang.Runnable
+    @Override
     public synchronized void run() {
         while (true) {
             try {
@@ -240,9 +216,9 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
                         }
                         if (!z) {
                             if (devtype2 == 2) {
-                                System.out.println(new StringBuffer().append("Device attached: ").append(devices[i4]).toString());
+                                System.out.println("Device attached: " + devices[i4]);
                                 this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(devices[i4]);
-                                this.vdMenuItems[this.vdmenuIndx].setActionCommand(new StringBuffer().append("fd").append(devices[i4]).toString());
+                                this.vdMenuItems[this.vdmenuIndx].setActionCommand("fd" + devices[i4]);
                                 this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
                                 if (devices[i4].equals("A:") || devices[i4].equals("B:")) {
                                     this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/FloppyDisk.png"))));
@@ -272,7 +248,7 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
                             }
                         }
                         if (!z2) {
-                            System.out.println(new StringBuffer().append("Device removed: ").append(this.vdMenu.getItem(i6).getText()).toString());
+                            System.out.println("Device removed: " + this.vdMenu.getItem(i6).getText());
                             this.vdMenu.remove(i6);
                             this.vdMenu.updateUI();
                             this.vdmenuIndx--;
@@ -315,27 +291,27 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         makeVdMenu(this.mainMenuBar, this.jsonObj.getJSONNumber(jSONRequest, "virtual_media_priv"));
         makeKbMenu(this.mainMenuBar);
         makeHlpMenu(this.mainMenuBar);
-        this.scroller = new JScrollPane(this.remconsObj.session, 20, 30);
+        this.scroller = new JScrollPane(this.remconsObj.session, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         this.scroller.setVisible(true);
         try {
-            String stringBuffer = new StringBuffer().append(getLocalString(locinfo.MENUSTR_1024)).append(" ").append(this.server_name).append(" ").append(getLocalString(locinfo.MENUSTR_1025)).append(" ").append(this.ilo_fqdn).toString();
+            String stringBuffer = locinfo.MENUSTR_1024 + " " + this.server_name + " " + locinfo.MENUSTR_1025 + " " + this.ilo_fqdn;
             if (this.blade == 1 && this.in_enclosure) {
-                stringBuffer = new StringBuffer().append(stringBuffer).append(" ").append(getLocalString(locinfo.MENUSTR_1026)).append(" ").append(this.enclosure).append(" ").append(getLocalString(locinfo.MENUSTR_1027)).append(" ").append(this.bay).toString();
+                stringBuffer = stringBuffer + " " + locinfo.MENUSTR_1026 + " " + this.enclosure + " " + locinfo.MENUSTR_1027 + " " + this.bay;
             }
             this.dispFrame.setTitle(stringBuffer);
         } catch (Exception e) {
-            this.dispFrame.setTitle(new StringBuffer().append(getLocalString(locinfo.MENUSTR_1024)).append(" ").append(getCodeBase().getHost()).toString());
+            this.dispFrame.setTitle(locinfo.MENUSTR_1024 + " " + getCodeBase().getHost());
             System.out.println("IRC title not available");
         }
         int i = Toolkit.getDefaultToolkit().getScreenSize().width;
         int i2 = Toolkit.getDefaultToolkit().getScreenSize().height;
-        int i3 = i < 1054 ? i : 1054;
+        int i3 = Math.min(i, 1054);
         int i4 = i2 < 874 ? i2 - 30 : 874;
         int i5 = i > 1054 ? (i - 1054) / 2 : 0;
         int i6 = i2 > 874 ? (i2 - 874) / 2 : 0;
         this.dispFrame.setSize(i3, i4);
         this.dispFrame.setLocation(i5, i6);
-        System.out.println(new StringBuffer().append("check dimensions ").append(i3).append(" ").append(i4).append(" ").append(i5).append(" ").append(i6).toString());
+        System.out.println("check dimensions " + i3 + " " + i4 + " " + i5 + " " + i6);
         this.dispFrame.setVisible(true);
         try {
             this.dispFrame.getInsets();
@@ -349,15 +325,15 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
     }
 
     protected void makeHlpMenu(JMenuBar jMenuBar) {
-        this.hlpMenu = new JMenu(getLocalString(locinfo.MENUSTR_1028));
-        this.aboutJirc = new JMenuItem(getLocalString(locinfo.MENUSTR_1029));
+        this.hlpMenu = new JMenu(locinfo.MENUSTR_1028);
+        this.aboutJirc = new JMenuItem(locinfo.MENUSTR_1029);
         this.aboutJirc.addActionListener(this);
         this.hlpMenu.add(this.aboutJirc);
         jMenuBar.add(this.hlpMenu);
     }
 
     protected void makeVdMenu(JMenuBar jMenuBar, int i) {
-        this.vdMenu = new JMenu(getLocalString(locinfo.MENUSTR_1002));
+        this.vdMenu = new JMenu(locinfo.MENUSTR_1002);
         if (i == 1) {
             jMenuBar.add(this.vdMenu);
         }
@@ -373,20 +349,20 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         this.vdmenuIndx = 0;
         if (devices != null) {
             this.vdMenuItems = new JCheckBoxMenuItem[devices.length + 5];
-            for (int i = 0; i < devices.length; i++) {
-                int devtype = this.ma.devtype(devices[i]);
+            for (String device : devices) {
+                int devtype = this.ma.devtype(device);
                 if (devtype == 5) {
-                    this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(devices[i]);
-                    this.vdMenuItems[this.vdmenuIndx].setActionCommand(new StringBuffer().append("cd").append(devices[i]).toString());
+                    this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(device);
+                    this.vdMenuItems[this.vdmenuIndx].setActionCommand("cd" + device);
                     this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
                     this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/CD_Drive.png"))));
                     this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
                     this.vdmenuIndx++;
                 } else if (devtype == 2) {
-                    this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(devices[i]);
-                    this.vdMenuItems[this.vdmenuIndx].setActionCommand(new StringBuffer().append("fd").append(devices[i]).toString());
+                    this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(device);
+                    this.vdMenuItems[this.vdmenuIndx].setActionCommand("fd" + device);
                     this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
-                    if (devices[i].equals("A:") || devices[i].equals("B:")) {
+                    if (device.equals("A:") || device.equals("B:")) {
                         this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/FloppyDisk.png"))));
                     } else {
                         this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/usb.png"))));
@@ -400,13 +376,13 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
             System.out.println("Media Access not available...");
         }
         this.ma = null;
-        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(new StringBuffer().append(getLocalString(locinfo.MENUSTR_1022)).append(" ").append(getLocalString(locinfo.MENUSTR_100A)).toString());
-        this.vdMenuItems[this.vdmenuIndx].setActionCommand(new StringBuffer().append("fd").append(getLocalString(locinfo.STATUSSTR_3117)).toString());
+        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1022 + " " + locinfo.MENUSTR_100A);
+        this.vdMenuItems[this.vdmenuIndx].setActionCommand("fd" + locinfo.STATUSSTR_3117);
         this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
         this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Image_File.png"))));
         this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
         this.vdmenuIndx++;
-        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(new StringBuffer().append(getLocalString(locinfo.MENUSTR_1023)).append(getLocalString(locinfo.MENUSTR_100A)).toString());
+        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1023 + locinfo.MENUSTR_100A);
         this.vdMenuItems[this.vdmenuIndx].setActionCommand("FLOPPY");
         this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Network.png"))));
         this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
@@ -416,13 +392,13 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
             this.fdSelected = true;
             lockFdMenu(false, "URL Removable Media");
         }
-        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(new StringBuffer().append(getLocalString(locinfo.MENUSTR_1022)).append(" ").append(getLocalString(locinfo.MENUSTR_100B)).toString());
-        this.vdMenuItems[this.vdmenuIndx].setActionCommand(new StringBuffer().append("cd").append(getLocalString(locinfo.STATUSSTR_3117)).toString());
+        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1022 + " " + locinfo.MENUSTR_100B);
+        this.vdMenuItems[this.vdmenuIndx].setActionCommand("cd" + locinfo.STATUSSTR_3117);
         this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
         this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Image_File.png"))));
         this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
         this.vdmenuIndx++;
-        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(new StringBuffer().append(getLocalString(locinfo.MENUSTR_1023)).append(getLocalString(locinfo.MENUSTR_100B)).toString());
+        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1023 + locinfo.MENUSTR_100B);
         this.vdMenuItems[this.vdmenuIndx].setActionCommand("CDROM");
         this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Network.png"))));
         this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
@@ -433,7 +409,7 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
             lockCdMenu(false, "URL CD/DVD-ROM");
         }
         this.vdMenu.addSeparator();
-        this.vdMenuItemCrImage = new JMenuItem(getLocalString(locinfo.MENUSTR_100D));
+        this.vdMenuItemCrImage = new JMenuItem(locinfo.MENUSTR_100D);
         this.vdMenuItemCrImage.setActionCommand("CreateDiskImage");
         this.vdMenuItemCrImage.addActionListener(this);
         this.vdMenu.add(this.vdMenuItemCrImage);
@@ -471,21 +447,21 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
 
     protected void makePsMenu(JMenuBar jMenuBar, int i) {
         ClassLoader classLoader = getClass().getClassLoader();
-        this.psMenu = new JMenu(getLocalString(locinfo.MENUSTR_1001));
-        this.momPress = new JMenuItem(getLocalString(locinfo.MENUSTR_1004));
+        this.psMenu = new JMenu(locinfo.MENUSTR_1001);
+        this.momPress = new JMenuItem(locinfo.MENUSTR_1004);
         this.momPress.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/press.png"))));
         this.momPress.setActionCommand("psMomPress");
         this.momPress.addActionListener(this);
         this.psMenu.add(this.momPress);
-        this.pressHold = new JMenuItem(getLocalString(locinfo.MENUSTR_1005));
+        this.pressHold = new JMenuItem(locinfo.MENUSTR_1005);
         this.pressHold.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/hold.png"))));
         this.pressHold.setActionCommand("psPressHold");
         this.pressHold.addActionListener(this);
-        this.powerCycle = new JMenuItem(getLocalString(locinfo.MENUSTR_1006));
+        this.powerCycle = new JMenuItem(locinfo.MENUSTR_1006);
         this.powerCycle.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/coldboot.png"))));
         this.powerCycle.setActionCommand("psPowerCycle");
         this.powerCycle.addActionListener(this);
-        this.sysReset = new JMenuItem(getLocalString(locinfo.MENUSTR_1007));
+        this.sysReset = new JMenuItem(locinfo.MENUSTR_1007);
         this.sysReset.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/reset.png"))));
         this.sysReset.setActionCommand("psSysReset");
         this.sysReset.addActionListener(this);
@@ -511,21 +487,21 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
 
     protected void makeKbMenu(JMenuBar jMenuBar) {
         ClassLoader classLoader = getClass().getClassLoader();
-        this.kbMenu = new JMenu(getLocalString(locinfo.MENUSTR_1003));
+        this.kbMenu = new JMenu(locinfo.MENUSTR_1003);
         this.kbCAFMenu = new JMenu("CTRL-ALT-Fn");
         this.kbAFMenu = new JMenu("ALT-Fn");
-        this.kbLangMenu = new JMenu(getLocalString(locinfo.MENUSTR_100E));
-        this.ctlAltDel = new JMenuItem(getLocalString(locinfo.MENUSTR_1008));
+        this.kbLangMenu = new JMenu(locinfo.MENUSTR_100E);
+        this.ctlAltDel = new JMenuItem(locinfo.MENUSTR_1008);
         this.ctlAltDel.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Keyboard.png"))));
         this.ctlAltDel.setActionCommand("kbCtlAltDel");
         this.ctlAltDel.addActionListener(this);
         this.kbMenu.add(this.ctlAltDel);
-        this.numLock = new JMenuItem(getLocalString(locinfo.MENUSTR_1009));
+        this.numLock = new JMenuItem(locinfo.MENUSTR_1009);
         this.numLock.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Keyboard.png"))));
         this.numLock.setActionCommand("kbNumLock");
         this.numLock.addActionListener(this);
         this.kbMenu.add(this.numLock);
-        this.capsLock = new JMenuItem(getLocalString(locinfo.MENUSTR_1020));
+        this.capsLock = new JMenuItem(locinfo.MENUSTR_1020);
         this.capsLock.setIcon(new ImageIcon(getImage(classLoader.getResource("com/hp/ilo2/remcons/images/Keyboard.png"))));
         this.capsLock.setActionCommand("kbCapsLock");
         this.capsLock.addActionListener(this);
@@ -536,22 +512,22 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         this.ctlAltBack.addActionListener(this);
         this.ctlAltFn = new JMenuItem[this.REMCONS_MAX_FN_KEYS];
         for (int i = 0; i < this.REMCONS_MAX_FN_KEYS; i++) {
-            this.ctlAltFn[i] = new JMenuItem(new StringBuffer().append("CTRL-ALT-F").append(i + 1).toString());
-            this.ctlAltFn[i].setActionCommand(new StringBuffer().append("kbCtrlAltFn").append(i).toString());
+            this.ctlAltFn[i] = new JMenuItem("CTRL-ALT-F" + (i + 1));
+            this.ctlAltFn[i].setActionCommand("kbCtrlAltFn" + i);
             this.ctlAltFn[i].addActionListener(this);
             this.kbCAFMenu.add(this.ctlAltFn[i]);
         }
         this.AltFn = new JMenuItem[this.REMCONS_MAX_FN_KEYS];
         for (int i2 = 0; i2 < this.REMCONS_MAX_FN_KEYS; i2++) {
-            this.AltFn[i2] = new JMenuItem(new StringBuffer().append("ALT-F").append(i2 + 1).toString());
-            this.AltFn[i2].setActionCommand(new StringBuffer().append("kbAltFn").append(i2).toString());
+            this.AltFn[i2] = new JMenuItem("ALT-F" + (i2 + 1));
+            this.AltFn[i2].setActionCommand("kbAltFn" + i2);
             this.AltFn[i2].addActionListener(this);
             this.kbAFMenu.add(this.AltFn[i2]);
         }
         this.localKbdLayout = new JCheckBoxMenuItem[this.REMCONS_MAX_KBD_LAYOUT];
         for (int i3 = 0; i3 < this.REMCONS_MAX_KBD_LAYOUT; i3++) {
-            this.localKbdLayout[i3] = new JCheckBoxMenuItem(getLocalString(locinfo.MENUSTR_100F + i3));
-            this.localKbdLayout[i3].setActionCommand(new StringBuffer().append("localKbdLayout").append(i3).toString());
+            this.localKbdLayout[i3] = new JCheckBoxMenuItem(locinfo.MENUSTR_100F + i3);
+            this.localKbdLayout[i3].setActionCommand("localKbdLayout" + i3);
             this.localKbdLayout[i3].addItemListener(this);
             this.kbLangMenu.add(this.localKbdLayout[i3]);
         }
@@ -563,7 +539,7 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
             this.kbMenu.add(this.kbLangMenu);
         }
         this.kbMenu.addSeparator();
-        this.hotKeys = new JMenuItem(getLocalString(locinfo.MENUSTR_1021));
+        this.hotKeys = new JMenuItem(locinfo.MENUSTR_1021);
         this.hotKeys.addActionListener(this);
         this.kbMenu.add(this.hotKeys);
         jMenuBar.add(this.kbMenu);
@@ -608,7 +584,7 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
                 }
             }
             if (i >= this.REMCONS_MAX_FN_KEYS) {
-                System.out.println(new StringBuffer().append("Unhandled ActionItem").append(actionEvent.getActionCommand()).toString());
+                System.out.println("Unhandled ActionItem" + actionEvent.getActionCommand());
             }
         }
     }
@@ -641,46 +617,38 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         }
         if (abstractButton == null || str == null) {
             System.out.println("Unhandled item event");
-        } else if (str.equals(new StringBuffer().append("fd").append(getLocalString(locinfo.STATUSSTR_3117)).toString())) {
+        } else if (str.equals("fd" + locinfo.STATUSSTR_3117)) {
             if (stateChange == 2) {
                 this.virtdevsObj.do_floppy(str2);
                 lockFdMenu(true, str2);
             } else if (stateChange == 1) {
                 this.dispFrame.setVisible(false);
-                String string = new VFileDialog(getLocalString(locinfo.DIALOGSTR_2045), "*.img").getString();
+                String string = new VFileDialog(locinfo.DIALOGSTR_2045, "*.img").getString();
                 this.dispFrame.setVisible(true);
                 if (string != null) {
                     if (this.virtdevsObj.fdThread != null) {
                         this.virtdevsObj.change_disk(this.virtdevsObj.fdConnection, string);
                     }
-                    System.out.println(new StringBuffer().append("Image file: ").append(string).toString());
-                    if (!this.virtdevsObj.do_floppy(string)) {
-                        lockFdMenu(true, str2);
-                    } else {
-                        lockFdMenu(false, str2);
-                    }
+                    System.out.println("Image file: " + string);
+                    lockFdMenu(!this.virtdevsObj.do_floppy(string), str2);
                 } else {
                     lockFdMenu(true, str2);
                 }
             }
-        } else if (str.equals(new StringBuffer().append("cd").append(getLocalString(locinfo.STATUSSTR_3117)).toString())) {
+        } else if (str.equals("cd" + locinfo.STATUSSTR_3117)) {
             if (stateChange == 2) {
                 this.virtdevsObj.do_cdrom(str2);
                 lockCdMenu(true, str2);
             } else if (stateChange == 1) {
                 this.dispFrame.setVisible(false);
-                String string2 = new VFileDialog(getLocalString(locinfo.DIALOGSTR_2045), "*.iso").getString();
+                String string2 = new VFileDialog(locinfo.DIALOGSTR_2045, "*.iso").getString();
                 this.dispFrame.setVisible(true);
                 if (string2 != null) {
                     if (this.virtdevsObj.cdThread != null) {
                         this.virtdevsObj.change_disk(this.virtdevsObj.cdConnection, string2);
                     }
-                    System.out.println(new StringBuffer().append("Image file: ").append(string2).toString());
-                    if (!this.virtdevsObj.do_cdrom(string2)) {
-                        lockCdMenu(true, str2);
-                    } else {
-                        lockCdMenu(false, str2);
-                    }
+                    System.out.println("Image file: " + string2);
+                    lockCdMenu(!this.virtdevsObj.do_cdrom(string2), str2);
                 } else {
                     lockCdMenu(true, str2);
                 }
@@ -696,7 +664,7 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         } else if (str.equals("FLOPPY") || str.equals("CDROM")) {
             boolean z = false;
             if (stateChange == 2) {
-                this.jsonObj.postJSONRequest("vm_status", new StringBuffer().append("{\"method\":\"set_virtual_media_options\", \"device\":\"").append(str).append("\", \"command\":\"EJECT\", \"session_key\":\"").append(getParameter("RCINFO1")).append("\"}").toString());
+                this.jsonObj.postJSONRequest("vm_status", "{\"method\":\"set_virtual_media_options\", \"device\":\"" + str + "\", \"command\":\"EJECT\", \"session_key\":\"" + getParameter("RCINFO1") + "\"}");
                 this.remconsObj.session.set_status(3, "Unmounted URL");
             } else if (stateChange == 1) {
                 this.remconsObj.setDialogIsOpen(true);
@@ -706,21 +674,21 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
                 }
                 if (userInput != null) {
                     userInput = userInput.replaceAll("[\\u0000-\u001F]", "");
-                    System.out.println(new StringBuffer().append("url:  ").append(userInput).toString());
+                    System.out.println("url:  " + userInput);
                 }
                 this.remconsObj.setDialogIsOpen(false);
                 if (userInput != null) {
-                    String postJSONRequest = this.jsonObj.postJSONRequest("vm_status", new StringBuffer().append("{\"method\":\"set_virtual_media_options\", \"device\":\"").append(str).append("\", \"command\":\"INSERT\", \"url\":\"").append(userInput).append("\", \"session_key\":\"").append(getParameter("RCINFO1")).append("\"}").toString());
-                    if (postJSONRequest == "Success") {
-                        postJSONRequest = this.jsonObj.postJSONRequest("vm_status", new StringBuffer().append("{\"method\":\"set_virtual_media_options\", \"device\":\"").append(str).append("\", \"boot_option\":\"CONNECT\", \"command\":\"SET\", \"url\":\"").append(userInput).append("\", \"session_key\":\"").append(getParameter("RCINFO1")).append("\"}").toString());
+                    String postJSONRequest = this.jsonObj.postJSONRequest("vm_status", "{\"method\":\"set_virtual_media_options\", \"device\":\"" + str + "\", \"command\":\"INSERT\", \"url\":\"" + userInput + "\", \"session_key\":\"" + getParameter("RCINFO1") + "\"}");
+                    if (Objects.equals(postJSONRequest, "Success")) {
+                        postJSONRequest = this.jsonObj.postJSONRequest("vm_status", "{\"method\":\"set_virtual_media_options\", \"device\":\"" + str + "\", \"boot_option\":\"CONNECT\", \"command\":\"SET\", \"url\":\"" + userInput + "\", \"session_key\":\"" + getParameter("RCINFO1") + "\"}");
                     }
-                    if (postJSONRequest == "SCSI_ERR_NO_LICENSE") {
-                        new VErrorDialog(this.dispFrame, getLocalString(locinfo.DIALOGSTR_202c), new StringBuffer().append("<html>").append(getLocalString(locinfo.DIALOGSTR_2015)).append(" ").append(getLocalString(locinfo.DIALOGSTR_2016)).append(" ").append(getLocalString(locinfo.DIALOGSTR_202d)).append("<br><br>").append(getLocalString(locinfo.DIALOGSTR_202e)).append("</html>").toString(), true);
-                    } else if (postJSONRequest != "Success") {
-                        new VErrorDialog(this.dispFrame, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_2064), true);
+                    if (Objects.equals(postJSONRequest, "SCSI_ERR_NO_LICENSE")) {
+                        new VErrorDialog(this.dispFrame, locinfo.DIALOGSTR_202c, "<html>" + locinfo.DIALOGSTR_2015 + " " + locinfo.DIALOGSTR_2016 + " " + locinfo.DIALOGSTR_202d + "<br><br>" + locinfo.DIALOGSTR_202e + "</html>", true);
+                    } else if (!Objects.equals(postJSONRequest, "Success")) {
+                        new VErrorDialog(this.dispFrame, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_2064, true);
                     } else {
                         z = true;
-                        this.remconsObj.session.set_status(3, getLocalString(locinfo.STATUSSTR_3125));
+                        this.remconsObj.session.set_status(3, locinfo.STATUSSTR_3125);
                     }
                 }
             }
@@ -741,7 +709,7 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         this.remconsObj.setLocalKbdLayout(i);
     }
 
-    public class WindowCloser extends WindowAdapter {
+    public static class WindowCloser extends WindowAdapter {
         private final intgapp this$0;
 
         WindowCloser(intgapp intgappVar) {
@@ -783,34 +751,34 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
                     }
                 }
             } else if (substring.compareToIgnoreCase("rc_port") == 0) {
-                System.out.println(new StringBuffer().append("rc_port:").append(trim3).toString());
+                System.out.println("rc_port:" + trim3);
                 this.rc_port = trim3;
             } else if (substring.compareToIgnoreCase("vm_key") == 0) {
                 this.vm_key = trim3;
             } else if (substring.compareToIgnoreCase("vm_port") == 0) {
-                System.out.println(new StringBuffer().append("vm_port:").append(trim3).toString());
+                System.out.println("vm_port:" + trim3);
                 this.vm_port = trim3;
             } else if (substring.equalsIgnoreCase("optional_features")) {
-                System.out.println(new StringBuffer().append("optional_features:").append(trim3).toString());
+                System.out.println("optional_features:" + trim3);
                 this.optional_features = trim3;
             } else if (substring.compareToIgnoreCase("server_name") == 0) {
-                System.out.println(new StringBuffer().append("server_name:").append(trim3).toString());
+                System.out.println("server_name:" + trim3);
                 this.server_name = trim3;
             } else if (substring.compareToIgnoreCase("ilo_fqdn") == 0) {
-                System.out.println(new StringBuffer().append("ilo_fqdn:").append(trim3).toString());
+                System.out.println("ilo_fqdn:" + trim3);
                 this.ilo_fqdn = trim3;
             } else if (substring.compareToIgnoreCase("blade") == 0) {
                 this.blade = Integer.parseInt(trim3);
-                System.out.println(new StringBuffer().append("blade:").append(this.blade).toString());
+                System.out.println("blade:" + this.blade);
             } else if (this.blade == 1 && substring.compareToIgnoreCase("enclosure") == 0) {
                 if (!trim3.equals("null")) {
                     this.in_enclosure = true;
-                    System.out.println(new StringBuffer().append("enclosure:").append(trim3).toString());
+                    System.out.println("enclosure:" + trim3);
                     this.enclosure = trim3;
                 }
             } else if (this.blade == 1 && substring.compareToIgnoreCase("bay") == 0) {
                 this.bay = Integer.parseInt(trim3);
-                System.out.println(new StringBuffer().append("bay:").append(this.bay).toString());
+                System.out.println("bay:" + this.bay);
             }
         }
     }

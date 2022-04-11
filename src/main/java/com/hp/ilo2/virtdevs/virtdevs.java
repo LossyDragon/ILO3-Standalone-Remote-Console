@@ -22,58 +22,48 @@ import java.util.Properties;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-
 public class virtdevs extends JPanel implements Runnable {
-    public static final int UNQF_HIDEFLP = 1;
-    public static int UID;
-    static final int ImageDone = 39;
-    String host;
+
+    JFrame parent;
     String base;
     String configuration;
-    String dev_floppy;
-    String dev_cdrom;
     String dev_auto;
-    JFrame parent;
-    public static boolean cd_support = true;
-    public static Properties prop;
-    public intgapp ParentApp;
+    String dev_cdrom;
+    String dev_floppy;
+    String host;
     String hostAddress;
-    public Connection fdConnection;
+    boolean force_config = false;
+    boolean thread_init = false;
+    byte[] key = new byte[32];
+    byte[] pre = new byte[16];
+    int fdport = 17988;
+    protected boolean running = false;
+    protected boolean stopFlag = false;
     public Connection cdConnection;
-    public Thread fdThread;
+    public Connection fdConnection;
     public Thread cdThread;
-    static Class class$java$net$Socket;
-    static Class class$java$net$SocketImpl;
-    static Class class$java$io$FileDescriptor;
+    public Thread fdThread;
+    public boolean cdConnected = false;
+    public boolean fdConnected = false;
     public int dev_cd_device = 0;
     public int dev_fd_device = 0;
     public int unq_feature = 0;
-    boolean force_config = false;
-    boolean thread_init = false;
-    byte[] pre = new byte[16];
-    byte[] key = new byte[32];
-    int fdport = 17988;
-    public boolean cdConnected = false;
-    public boolean fdConnected = false;
-    protected boolean stopFlag = false;
-    protected boolean running = false;
-
-    public String getLocalString(int i) {
-        String str = "";
-        try {
-            str = this.ParentApp.locinfoObj.getLocString(i);
-        } catch (Exception e) {
-            System.out.println(new StringBuffer().append("virdevs:getLocalString").append(e.getMessage()).toString());
-        }
-        return str;
-    }
+    public intgapp ParentApp;
+    public static Properties prop;
+    public static boolean cd_support = true;
+    public static final int UNQF_HIDEFLP = 1;
+    public static int UID;
+    static Class class$java$io$FileDescriptor;
+    static Class class$java$net$Socket;
+    static Class class$java$net$SocketImpl;
+    static final int ImageDone = 39;
 
     public virtdevs(intgapp intgappVar) {
         this.ParentApp = intgappVar;
     }
 
     public Image get(String str) {
-        return this.ParentApp.getImage(getClass().getClassLoader().getResource(new StringBuffer().append("com/hp/ilo2/virtdevs/").append(str).toString()));
+        return this.ParentApp.getImage(getClass().getClassLoader().getResource("com/hp/ilo2/virtdevs/" + str));
     }
 
     public void init() {
@@ -85,18 +75,18 @@ public class virtdevs extends JPanel implements Runnable {
         if (this.host == null) {
             this.host = documentBase.getHost();
         }
-        this.base = new StringBuffer().append(documentBase.getProtocol()).append("://").append(documentBase.getHost()).toString();
+        this.base = documentBase.getProtocol() + "://" + documentBase.getHost();
         if (documentBase.getPort() != -1) {
-            this.base = new StringBuffer().append(this.base).append(":").append(documentBase.getPort()).toString();
+            this.base = this.base + ":" + documentBase.getPort();
         }
-        this.base = new StringBuffer().append(this.base).append("/").toString();
+        this.base = this.base + "/";
         String parameter = this.ParentApp.getParameter("INFO0");
         if (parameter != null) {
             for (int i = 0; i < 16; i++) {
                 try {
                     this.pre[i] = (byte) Integer.parseInt(parameter.substring(2 * i, (2 * i) + 2), 16);
                 } catch (NumberFormatException e) {
-                    D.println(0, new StringBuffer().append("Couldn't parse INFO0: ").append(e).toString());
+                    D.println(0, "Couldn't parse INFO0: " + e);
                 }
             }
         }
@@ -105,7 +95,7 @@ public class virtdevs extends JPanel implements Runnable {
                 this.fdport = Integer.parseInt(this.ParentApp.vm_port);
             }
         } catch (NumberFormatException e2) {
-            D.println(0, new StringBuffer().append("Couldn't parse INFO1: ").append(e2).toString());
+            D.println(0, "Couldn't parse INFO1: " + e2);
         }
         this.configuration = this.ParentApp.getParameter("INFO2");
         if (this.configuration == null) {
@@ -124,11 +114,11 @@ public class virtdevs extends JPanel implements Runnable {
             try {
                 this.unq_feature = Integer.parseInt(parameter3);
             } catch (NumberFormatException e3) {
-                D.println(0, new StringBuffer().append("Couldn't parse UNIQUE_FEATURES: ").append(e3).toString());
+                D.println(0, "Couldn't parse UNIQUE_FEATURES: " + e3);
             }
         }
         this.key = this.ParentApp.getParameter("RCINFO1").getBytes();
-        if (this.ParentApp.optional_features.indexOf("ENCRYPT_VMKEY") != -1) {
+        if (this.ParentApp.optional_features.contains("ENCRYPT_VMKEY")) {
             for (int i2 = 0; i2 < this.key.length; i2++) {
                 byte[] bArr = this.key;
                 bArr[i2] = (byte) (bArr[i2] ^ ((byte) this.ParentApp.enc_key.charAt(i2 % this.ParentApp.enc_key.length())));
@@ -142,7 +132,7 @@ public class virtdevs extends JPanel implements Runnable {
         try {
             Thread.sleep(1000L);
         } catch (InterruptedException e) {
-            System.out.println(new StringBuffer().append("Exception: ").append(e).toString());
+            System.out.println("Exception: " + e);
         }
         this.hostAddress = this.host;
         if (ui_init(this.base)) {
@@ -160,7 +150,7 @@ public class virtdevs extends JPanel implements Runnable {
     }
 
     public void stop() {
-        D.println(3, new StringBuffer().append("Stop ").append(this).toString());
+        D.println(3, "Stop " + this);
         if (this.fdConnection != null) {
             try {
                 this.fdConnection.close();
@@ -184,20 +174,20 @@ public class virtdevs extends JPanel implements Runnable {
         try {
             Thread.sleep(1000L);
         } catch (InterruptedException e) {
-            System.out.println(new StringBuffer().append("Exception: ").append(e).toString());
+            System.out.println("Exception: " + e);
         }
     }
 
-    @Override // java.lang.Runnable
+    @Override
     public synchronized void run() {
         if (!this.thread_init) {
             prop = new Properties();
             try {
-                prop.load(new FileInputStream(new StringBuffer().append(System.getProperty("user.home")).append(System.getProperty("file.separator")).append(".java").append(System.getProperty("file.separator")).append("hp.properties").toString()));
+                prop.load(new FileInputStream(System.getProperty("user.home") + System.getProperty("file.separator") + ".java" + System.getProperty("file.separator") + "hp.properties"));
             } catch (Exception e) {
-                System.out.println(new StringBuffer().append("Exception: ").append(e).toString());
+                System.out.println("Exception: " + e);
             }
-            cd_support = Boolean.valueOf(prop.getProperty("com.hp.ilo2.virtdevs.cdimage", "true")).booleanValue();
+            cd_support = Boolean.parseBoolean(prop.getProperty("com.hp.ilo2.virtdevs.cdimage", "true"));
             new MediaAccess().setup_DirectIO();
             this.thread_init = true;
             this.ParentApp.updateVdMenu();
@@ -242,10 +232,10 @@ public class virtdevs extends JPanel implements Runnable {
                 this.fdConnection = new Connection(this.hostAddress, this.fdport, 1, str, 0, this.pre, this.key, this);
                 System.out.println("Starting fd non-Read-Only");
                 this.fdConnection.setWriteProt(false);
-                setCursor(Cursor.getPredefinedCursor(3));
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 try {
                     int connect = this.fdConnection.connect();
-                    setCursor(Cursor.getPredefinedCursor(0));
+                    setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                     switch (connect) {
                         case 0:
                             this.fdThread = new Thread(this.fdConnection, "fdConnection");
@@ -254,41 +244,41 @@ public class virtdevs extends JPanel implements Runnable {
                             return true;
                         case 33:
                             this.ParentApp.lockFdMenu(true, "");
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_2006));
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_2006);
                             return false;
                         case 34:
                             if (rekey("/html/java_irc.html")) {
-                                str2 = getLocalString(locinfo.DIALOGSTR_2007);
+                                str2 = locinfo.DIALOGSTR_2007;
                             } else {
-                                str2 = getLocalString(locinfo.DIALOGSTR_2008);
+                                str2 = locinfo.DIALOGSTR_2008;
                             }
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), str2);
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, str2);
                             return false;
                         case SCSI.SCSI_READ_CAPACITIES :
                             this.ParentApp.lockFdMenu(true, "");
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_2009));
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_2009);
                             return false;
                         case SCSI.SCSI_READ_CAPACITY :
                             this.ParentApp.lockFdMenu(true, "");
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_200a));
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_200a);
                             return false;
                         case 38:
                             this.ParentApp.lockFdMenu(true, "");
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_200b));
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_200b);
                             return false;
                         default:
                             this.ParentApp.lockFdMenu(true, "");
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), new StringBuffer().append(getLocalString(locinfo.DIALOGSTR_200c)).append("(").append(Integer.toHexString(connect)).append(").").append(getLocalString(locinfo.DIALOGSTR_200d)).toString());
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_200c + "(" + Integer.toHexString(connect) + ")." + locinfo.DIALOGSTR_200d);
                             return false;
                     }
                 } catch (Exception e) {
-                    setCursor(Cursor.getPredefinedCursor(0));
+                    setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                     D.println(0, "Couldn't connect!\n");
-                    new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), new StringBuffer().append(getLocalString(locinfo.DIALOGSTR_2005)).append("(").append(e).append(")").toString());
+                    new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_2005 + "(" + e + ")");
                     return false;
                 }
             } catch (Exception e2) {
-                new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), e2.getMessage());
+                new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, e2.getMessage());
                 return false;
             }
         } else {
@@ -296,7 +286,7 @@ public class virtdevs extends JPanel implements Runnable {
                 this.fdConnection.close();
                 return true;
             } catch (Exception e3) {
-                D.println(0, new StringBuffer().append("Exception during close: ").append(e3).toString());
+                D.println(0, "Exception during close: " + e3);
                 return true;
             }
         }
@@ -318,40 +308,40 @@ public class virtdevs extends JPanel implements Runnable {
                             return true;
                         case 33:
                             this.ParentApp.lockCdMenu(true, "");
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_2006));
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_2006);
                             return false;
                         case 34:
                             if (rekey("/html/java_irc.html")) {
-                                str2 = getLocalString(locinfo.DIALOGSTR_2007);
+                                str2 = locinfo.DIALOGSTR_2007;
                             } else {
-                                str2 = getLocalString(locinfo.DIALOGSTR_2008);
+                                str2 = locinfo.DIALOGSTR_2008;
                             }
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), str2);
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, str2);
                             return false;
                         case SCSI.SCSI_READ_CAPACITIES :
                             this.ParentApp.lockCdMenu(true, "");
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_2009));
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_2009);
                             return false;
                         case SCSI.SCSI_READ_CAPACITY :
                             this.ParentApp.lockCdMenu(true, "");
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_200f));
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_200f);
                             return false;
                         case 38:
                             this.ParentApp.lockCdMenu(true, "");
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_200b));
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_200b);
                             return false;
                         default:
                             this.ParentApp.lockCdMenu(true, "");
-                            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), new StringBuffer().append(getLocalString(locinfo.DIALOGSTR_200c)).append(" (").append(Integer.toHexString(connect)).append(").").append(getLocalString(locinfo.DIALOGSTR_200d)).toString());
+                            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_200c + " (" + Integer.toHexString(connect) + ")." + locinfo.DIALOGSTR_200d);
                             return false;
                     }
                 } catch (Exception e) {
                     D.println(0, "Couldn't connect!\n");
-                    new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), new StringBuffer().append(getLocalString(locinfo.DIALOGSTR_200e)).append(" (").append(e).append(")").toString());
+                    new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_200e + " (" + e + ")");
                     return false;
                 }
             } catch (Exception e2) {
-                new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), e2.getMessage());
+                new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, e2.getMessage());
                 return false;
             }
         } else {
@@ -359,7 +349,7 @@ public class virtdevs extends JPanel implements Runnable {
                 this.cdConnection.close();
                 return true;
             } catch (Exception e3) {
-                D.println(0, new StringBuffer().append("Exception during close: ").append(e3).toString());
+                D.println(0, "Exception during close: " + e3);
                 return true;
             }
         }
@@ -375,7 +365,7 @@ public class virtdevs extends JPanel implements Runnable {
 
     void updateconfig() {
         try {
-            URL url = new URL(new StringBuffer().append(this.base).append("modusb.cgi?usb=").append(this.configuration).toString());
+            URL url = new URL(this.base + "modusb.cgi?usb=" + this.configuration);
             url.openConnection();
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(url.openStream()));
             while (true) {
@@ -384,10 +374,10 @@ public class virtdevs extends JPanel implements Runnable {
                     bufferedReader.close();
                     return;
                 }
-                D.println(3, new StringBuffer().append("updcfg: ").append(readLine).toString());
+                D.println(3, "updcfg: " + readLine);
             }
         } catch (Exception e) {
-            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), new StringBuffer().append(getLocalString(locinfo.DIALOGSTR_2010)).append("(").append(e).append(")").toString());
+            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_2010 + "(" + e + ")");
             e.printStackTrace();
         }
     }
@@ -395,14 +385,14 @@ public class virtdevs extends JPanel implements Runnable {
     public boolean rekey(String str) {
         String str2 = null;
         try {
-            D.println(3, new StringBuffer().append("Downloading new key: ").append(this.base).append(str).toString());
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new URL(new StringBuffer().append(this.base).append(str).toString()).openStream()));
+            D.println(3, "Downloading new key: " + this.base + str);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new URL(this.base + str).openStream()));
             while (true) {
                 String readLine = bufferedReader.readLine();
                 if (readLine == null) {
                     break;
                 }
-                D.println(0, new StringBuffer().append("rekey: ").append(readLine).toString());
+                D.println(0, "rekey: " + readLine);
                 if (readLine.startsWith("info0=\"")) {
                     str2 = readLine.substring(7, ImageDone);
                     break;
@@ -410,22 +400,22 @@ public class virtdevs extends JPanel implements Runnable {
             }
             bufferedReader.close();
             if (str2 == null) {
-                new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_2011));
+                new VErrorDialog(this.parent, (locinfo.DIALOGSTR_2014), (locinfo.DIALOGSTR_2011));
                 return false;
             }
             for (int i = 0; i < 16; i++) {
                 try {
                     this.pre[i] = (byte) Integer.parseInt(str2.substring(2 * i, (2 * i) + 2), 16);
                 } catch (NumberFormatException e) {
-                    D.println(0, new StringBuffer().append("Couldn't parse new key: ").append(e).toString());
-                    new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_2012));
+                    D.println(0, "Couldn't parse new key: " + e);
+                    new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_2012);
                     return false;
                 }
             }
             return true;
         } catch (Exception e2) {
-            D.println(0, new StringBuffer().append("rekey: ").append(e2).toString());
-            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), getLocalString(locinfo.DIALOGSTR_2011));
+            D.println(0, "rekey: " + e2);
+            new VErrorDialog(this.parent,locinfo.DIALOGSTR_2014, (locinfo.DIALOGSTR_2011));
             return false;
         }
     }
@@ -434,7 +424,7 @@ public class virtdevs extends JPanel implements Runnable {
         try {
             connection.change_disk(str);
         } catch (IOException e) {
-            new VErrorDialog(this.parent, getLocalString(locinfo.DIALOGSTR_2014), new StringBuffer().append(getLocalString(locinfo.DIALOGSTR_2013)).append(" (").append(e).append(")").toString());
+            new VErrorDialog(this.parent, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_2013 + " (" + e + ")");
         }
     }
 
@@ -523,11 +513,12 @@ public class virtdevs extends JPanel implements Runnable {
             }
             i = field2.getInt(fileDescriptor);
         } catch (Exception e) {
-            System.out.println(new StringBuffer().append("Ex: ").append(e).toString());
+            System.out.println("Ex: " + e);
         }
         return i;
     }
 
+    @SuppressWarnings("rawtypes")
     static Class class$(String str) {
         try {
             return Class.forName(str);

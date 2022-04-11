@@ -33,7 +33,7 @@ public class LocaleTranslator {
     Hashtable reverse_alias = new Hashtable();
 
     String create_accents(String str, String str2) {
-        StringBuffer stringBuffer = new StringBuffer(256);
+        StringBuilder stringBuffer = new StringBuilder(256);
         for (int i = 0; i < str.length(); i++) {
             char charAt = str.charAt(i);
             if (charAt == '*') {
@@ -48,7 +48,7 @@ public class LocaleTranslator {
     void parse_locale_str(String str, Hashtable hashtable) {
         int i = 0;
         Character ch = null;
-        StringBuffer stringBuffer = new StringBuffer(16);
+        StringBuilder stringBuffer = new StringBuilder(16);
         for (int i2 = 0; i2 < str.length(); i2++) {
             char charAt = str.charAt(i2);
             if (i != 0 || charAt == ' ') {
@@ -61,11 +61,11 @@ public class LocaleTranslator {
                 if (i == 1 && charAt == ' ') {
                     hashtable.put(ch, stringBuffer.toString());
                     i = 0;
-                    stringBuffer = new StringBuffer(16);
+                    stringBuffer = new StringBuilder(16);
                 }
             } else {
                 i++;
-                ch = new Character(charAt);
+                ch = charAt;
             }
         }
         hashtable.put(ch, stringBuffer.toString());
@@ -95,13 +95,13 @@ public class LocaleTranslator {
         String str = null;
         this.locales.put("en_US", new Hashtable());
         add_alias("en_US", "English (United States)");
-        add_locale("en_GB", new StringBuffer().append(this.british).append(this.euro1).toString(), "English (United Kingdom)");
-        add_locale("fr_FR", new StringBuffer().append(this.french).append(this.euro2).toString(), "French");
-        add_locale("it_IT", new StringBuffer().append(this.italian).append(this.euro2).toString(), "Italian");
-        add_locale("de_DE", new StringBuffer().append(this.german).append(this.euro2).toString(), "German");
-        add_locale("es_ES", new StringBuffer().append(this.spanish).append(this.euro2).toString(), "Spanish (Spain)");
+        add_locale("en_GB", this.british + this.euro1, "English (United Kingdom)");
+        add_locale("fr_FR", this.french + this.euro2, "French");
+        add_locale("it_IT", this.italian + this.euro2, "Italian");
+        add_locale("de_DE", this.german + this.euro2, "German");
+        add_locale("es_ES", this.spanish + this.euro2, "Spanish (Spain)");
         add_locale("ja_JP", this.japanese, "Japanese");
-        add_locale("es_MX", new StringBuffer().append(this.latin_american).append(this.euro2).toString(), "Spanish (Latin America)");
+        add_locale("es_MX", this.latin_american + this.euro2, "Spanish (Latin America)");
         add_iso_alias("es_MX", "es_AR");
         add_iso_alias("es_MX", "es_BO");
         add_iso_alias("es_MX", "es_CL");
@@ -119,44 +119,44 @@ public class LocaleTranslator {
         add_iso_alias("es_MX", "es_SV");
         add_iso_alias("es_MX", "es_UY");
         add_iso_alias("es_MX", "es_VE");
-        add_locale("fr_BE", new StringBuffer().append(this.belgian).append(this.euro2).toString(), "French Belgium");
-        add_locale("fr_CA", new StringBuffer().append(this.french_canadian).append(this.euro2).toString(), "French Canadian");
-        add_locale("da_DK", new StringBuffer().append(this.danish).append(this.euro2).toString(), "Danish");
-        add_locale("no_NO", new StringBuffer().append(this.norwegian).append(this.euro2).toString(), "Norwegian");
-        add_locale("pt_PT", new StringBuffer().append(this.portuguese).append(this.euro2).toString(), "Portugese");
-        add_locale("sv_SE", new StringBuffer().append(this.swedish).append(this.euro2).toString(), "Swedish");
-        add_locale("fi_FI", new StringBuffer().append(this.finnish).append(this.euro2).toString(), "Finnish");
-        add_locale("fr_CH", new StringBuffer().append(this.swiss_french).append(this.euro2).toString(), "Swiss (French)");
-        add_locale("de_CH", new StringBuffer().append(this.swiss_german).append(this.euro2).toString(), "Swiss (German)");
+        add_locale("fr_BE", this.belgian + this.euro2, "French Belgium");
+        add_locale("fr_CA", this.french_canadian + this.euro2, "French Canadian");
+        add_locale("da_DK", this.danish + this.euro2, "Danish");
+        add_locale("no_NO", this.norwegian + this.euro2, "Norwegian");
+        add_locale("pt_PT", this.portuguese + this.euro2, "Portugese");
+        add_locale("sv_SE", this.swedish + this.euro2, "Swedish");
+        add_locale("fi_FI", this.finnish + this.euro2, "Finnish");
+        add_locale("fr_CH", this.swiss_french + this.euro2, "Swiss (French)");
+        add_locale("de_CH", this.swiss_german + this.euro2, "Swiss (German)");
         Enumeration<?> propertyNames = remcons.prop.propertyNames();
         while (propertyNames.hasMoreElements()) {
             String str2 = (String) propertyNames.nextElement();
             if (str2.equals("locale.override")) {
                 str = remcons.prop.getProperty(str2);
-                System.out.println(new StringBuffer().append("Locale override: ").append(str).toString());
+                System.out.println("Locale override: " + str);
             } else if (str2.startsWith("locale.windows")) {
-                this.windows = Boolean.valueOf(remcons.prop.getProperty(str2)).booleanValue();
+                this.windows = Boolean.valueOf(remcons.prop.getProperty(str2));
             } else if (str2.startsWith("locale.showgui")) {
-                this.showgui = Boolean.valueOf(remcons.prop.getProperty(str2)).booleanValue();
+                this.showgui = Boolean.valueOf(remcons.prop.getProperty(str2));
             } else if (str2.startsWith("locale.")) {
                 String substring = str2.substring(7);
                 String property = remcons.prop.getProperty(str2);
-                System.out.println(new StringBuffer().append("Adding user defined local for ").append(substring).toString());
-                add_locale(substring, property, new StringBuffer().append(substring).append(" (User Defined)").toString());
+                System.out.println("Adding user defined local for " + substring);
+                add_locale(substring, property, substring + " (User Defined)");
             }
         }
         if (str != null) {
-            System.out.println(new StringBuffer().append("Trying to select locale: ").append(str).toString());
+            System.out.println("Trying to select locale: " + str);
             if (selectLocale(str) != 0) {
-                System.out.println(new StringBuffer().append("No keyboard definition for ").append(str).toString());
+                System.out.println("No keyboard definition for " + str);
                 return;
             }
             return;
         }
         Locale locale = Locale.getDefault();
-        System.out.println(new StringBuffer().append("Trying to select locale: ").append(locale.toString()).toString());
+        System.out.println("Trying to select locale: " + locale.toString());
         if (selectLocale(locale.toString()) != 0) {
-            System.out.println(new StringBuffer().append("No keyboard definition for '").append(locale.toString()).append("'").toString());
+            System.out.println("No keyboard definition for '" + locale + "'");
         }
     }
 
@@ -171,7 +171,7 @@ public class LocaleTranslator {
     }
 
     public String translate(char c) {
-        Character ch = new Character(c);
+        Character ch = c;
         String str = null;
         if (this.selected != null) {
             str = (String) this.selected.get(ch);

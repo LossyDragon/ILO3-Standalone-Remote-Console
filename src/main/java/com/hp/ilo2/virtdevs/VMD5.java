@@ -45,11 +45,11 @@ public final class VMD5 implements Cloneable {
     }
 
     private int F(int i, int i2, int i3) {
-        return (i & i2) | ((i ^ (-1)) & i3);
+        return (i & i2) | ((~i) & i3);
     }
 
     private int G(int i, int i2, int i3) {
-        return (i & i3) | (i2 & (i3 ^ (-1)));
+        return (i & i3) | (i2 & (~i3));
     }
 
     private int H(int i, int i2, int i3) {
@@ -57,7 +57,7 @@ public final class VMD5 implements Cloneable {
     }
 
     private int I(int i, int i2, int i3) {
-        return i2 ^ (i | (i3 ^ (-1)));
+        return i2 ^ (i | (~i3));
     }
 
     private int rotateLeft(int i, int i2) {

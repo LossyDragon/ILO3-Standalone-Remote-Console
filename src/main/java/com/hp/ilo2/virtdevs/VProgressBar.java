@@ -8,8 +8,8 @@ import java.awt.Image;
 
 
 public class VProgressBar extends Canvas {
-    private int progressWidth;
-    private int progressHeight;
+    private final int progressWidth;
+    private final int progressHeight;
     private float percentage;
     private Image offscreenImg;
     private Graphics offscreenG;
@@ -19,7 +19,7 @@ public class VProgressBar extends Canvas {
     public VProgressBar(int i, int i2) {
         this.progressColor = Color.red;
         this.progressBackground = Color.white;
-        setFont(new Font("Dialog", 0, 15));
+        setFont(new Font("Dialog", Font.PLAIN, 15));
         this.progressWidth = i;
         this.progressHeight = i2;
         setSize(i, i2);
@@ -28,7 +28,7 @@ public class VProgressBar extends Canvas {
     public VProgressBar(int i, int i2, Color color, Color color2, Color color3) {
         this.progressColor = Color.red;
         this.progressBackground = Color.white;
-        setFont(new Font("Dialog", 0, 12));
+        setFont(new Font("Dialog", Font.PLAIN, 12));
         this.progressWidth = i;
         this.progressHeight = i2;
         this.progressColor = color2;
@@ -65,10 +65,10 @@ public class VProgressBar extends Canvas {
         this.offscreenG.fillRect(0, 0, width, height);
         this.offscreenG.setColor(this.progressColor);
         this.offscreenG.fillRect(0, 0, (int) (width * this.percentage), height);
-        this.offscreenG.drawString(new StringBuffer().append(Integer.toString((int) (this.percentage * 100.0f))).append("%").toString(), (width / 2) - 8, (height / 2) + 5);
+        this.offscreenG.drawString((int) (this.percentage * 100.0f) + "%", (width / 2) - 8, (height / 2) + 5);
         this.offscreenG.clipRect(0, 0, (int) (width * this.percentage), height);
         this.offscreenG.setColor(this.progressBackground);
-        this.offscreenG.drawString(new StringBuffer().append(Integer.toString((int) (this.percentage * 100.0f))).append("%").toString(), (width / 2) - 8, (height / 2) + 5);
+        this.offscreenG.drawString((int) (this.percentage * 100.0f) + "%", (width / 2) - 8, (height / 2) + 5);
         graphics.setColor(this.progressBackground);
         graphics.draw3DRect((getSize().width / 2) - (this.progressWidth / 2), 0, this.progressWidth - 1, this.progressHeight - 1, false);
         graphics.drawImage(this.offscreenImg, 4 / 2, 4 / 2, this);

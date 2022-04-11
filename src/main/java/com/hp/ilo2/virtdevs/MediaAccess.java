@@ -46,9 +46,9 @@ public class MediaAccess {
             this.readonly = false;
             this.file = new File(str);
             if (!this.file.exists() && !z) {
-                throw new IOException(new StringBuffer().append("File ").append(str).append(" does not exist").toString());
+                throw new IOException("File " + str + " does not exist");
             } else if (this.file.isDirectory()) {
-                throw new IOException(new StringBuffer().append("File ").append(str).append(" is a directory").toString());
+                throw new IOException("File " + str + " is a directory");
             } else {
                 try {
                     this.raf = new RandomAccessFile(str, "rw");
@@ -68,7 +68,7 @@ public class MediaAccess {
                 return 0;
             }
         } else if (dio_setup != 0) {
-            throw new IOException(new StringBuffer().append("DirectIO not possible (").append(dio_setup).append(")").toString());
+            throw new IOException("DirectIO not possible (" + dio_setup + ")");
         } else {
             if (this.dio == null) {
                 this.dio = new DirectIO();
@@ -90,7 +90,7 @@ public class MediaAccess {
         if (this.dev) {
             int read = this.dio.read(j2, i, bArr);
             if (read != 0) {
-                throw new IOException(new StringBuffer().append("DirectIO read error (").append(this.dio.sysError(-read)).append(")").toString());
+                throw new IOException("DirectIO read error (" + this.dio.sysError(-read) + ")");
             }
             return;
         }
@@ -103,7 +103,7 @@ public class MediaAccess {
         if (this.dev) {
             int write = this.dio.write(j2, i, bArr);
             if (write != 0) {
-                throw new IOException(new StringBuffer().append("DirectIO write error (").append(this.dio.sysError(-write)).append(")").toString());
+                throw new IOException("DirectIO write error (" + this.dio.sysError(-write) + ")");
             }
             return;
         }
@@ -190,11 +190,11 @@ public class MediaAccess {
     public int dllExtract(String str, String str2) {
         ClassLoader classLoader = getClass().getClassLoader();
         byte[] bArr = new byte[4096];
-        D.println(1, new StringBuffer().append("dllExtract trying ").append(str).toString());
+        D.println(1, "dllExtract trying " + str);
         if (classLoader.getResource(str) == null) {
             return -1;
         }
-        D.println(1, new StringBuffer().append("Extracting ").append(classLoader.getResource(str).toExternalForm()).append(" to ").append(str2).toString());
+        D.println(1, "Extracting " + classLoader.getResource(str).toExternalForm() + " to " + str2);
         try {
             InputStream resourceAsStream = classLoader.getResourceAsStream(str);
             FileOutputStream fileOutputStream = new FileOutputStream(str2);
@@ -208,7 +208,7 @@ public class MediaAccess {
                 fileOutputStream.write(bArr, 0, read);
             }
         } catch (IOException e) {
-            D.println(0, new StringBuffer().append("dllExtract: ").append(e).toString());
+            D.println(0, "dllExtract: " + e);
             return -2;
         }
     }
@@ -223,7 +223,7 @@ public class MediaAccess {
             property2 = lowerCase.startsWith("windows") ? "C:\\TEMP" : "/tmp";
         }
         if (lowerCase.startsWith("windows")) {
-            if (property3.indexOf("64") != -1) {
+            if (property3.contains("64")) {
                 System.out.println("virt: Detected win 64bit jvm");
                 str = "x86-win64";
             } else {
@@ -232,7 +232,7 @@ public class MediaAccess {
             }
             dllext = ".dll";
         } else if (lowerCase.startsWith("linux")) {
-            if (property3.indexOf("64") != -1) {
+            if (property3.contains("64")) {
                 System.out.println("virt: Detected 64bit linux jvm");
                 str = "x86-linux-64";
             } else {
@@ -245,17 +245,17 @@ public class MediaAccess {
             file.mkdir();
         }
         if (!property2.endsWith(property)) {
-            property2 = new StringBuffer().append(property2).append(property).toString();
+            property2 = property2 + property;
         }
-        String stringBuffer = new StringBuffer().append(property2).append("cpqma-").append(Integer.toHexString(virtdevs.UID)).append(dllext).toString();
-        System.out.println(new StringBuffer().append("Checking for ").append(stringBuffer).toString());
+        String stringBuffer = property2 + "cpqma-" + Integer.toHexString(virtdevs.UID) + dllext;
+        System.out.println("Checking for " + stringBuffer);
         if (new File(stringBuffer).exists()) {
             System.out.println("DLL present");
             dio_setup = 0;
             return 0;
         }
         System.out.println("DLL not present");
-        int dllExtract = dllExtract(new StringBuffer().append("com/hp/ilo2/virtdevs/cpqma-").append(str).toString(), stringBuffer);
+        int dllExtract = dllExtract("com/hp/ilo2/virtdevs/cpqma-" + str, stringBuffer);
         dio_setup = dllExtract;
         return dllExtract;
     }
@@ -269,21 +269,21 @@ public class MediaAccess {
         }
         String[] list = new File(property2).list();
         if (!property2.endsWith(property)) {
-            property2 = new StringBuffer().append(property2).append(property).toString();
+            property2 = property2 + property;
         }
-        for (int i = 0; i < list.length; i++) {
-            if (list[i].startsWith("cpqma-") && list[i].endsWith(dllext)) {
-                new File(new StringBuffer().append(property2).append(list[i]).toString()).delete();
+        for (String item : list) {
+            if (item.startsWith("cpqma-") && item.endsWith(dllext)) {
+                new File(property2 + item).delete();
             }
         }
-        for (int i2 = 0; i2 < list.length; i2++) {
-            if (list[i2].startsWith("HpqKbHook-") && list[i2].endsWith(dllext)) {
-                new File(new StringBuffer().append(property2).append(list[i2]).toString()).delete();
+        for (String value : list) {
+            if (value.startsWith("HpqKbHook-") && value.endsWith(dllext)) {
+                new File(property2 + value).delete();
             }
         }
-        for (int i3 = 0; i3 < list.length; i3++) {
-            if (list[i3].startsWith("jirc_strings") && list[i3].endsWith("xml")) {
-                new File(new StringBuffer().append(property2).append(list[i3]).toString()).delete();
+        for (String s : list) {
+            if (s.startsWith("jirc_strings") && s.endsWith("xml")) {
+                new File(property2 + s).delete();
             }
         }
     }

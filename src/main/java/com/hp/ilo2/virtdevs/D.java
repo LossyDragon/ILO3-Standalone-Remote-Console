@@ -24,11 +24,11 @@ public class D {
             }
         } catch (Exception e) {
             out = System.out;
-            out.println(new StringBuffer().append("Exception trying to open debug trace\n").append(e).toString());
+            out.println("Exception trying to open debug trace\n" + e);
         }
         String property2 = virtdevs.prop.getProperty("com.hp.ilo2.virtdevs.debug");
         if (property2 != null) {
-            debug = Integer.valueOf(property2).intValue();
+            debug = Integer.valueOf(property2);
         }
     }
 
@@ -53,19 +53,19 @@ public class D {
     }
 
     public static String hex(int i, int i2) {
-        String hexString = Integer.toHexString(i);
+        StringBuilder hexString = new StringBuilder(Integer.toHexString(i));
         while (hexString.length() < i2) {
-            hexString = new StringBuffer().append("0").append(hexString).toString();
+            hexString.insert(0, "0");
         }
-        return hexString;
+        return hexString.toString();
     }
 
     public static String hex(long j, int i) {
-        String hexString = Long.toHexString(j);
+        StringBuilder hexString = new StringBuilder(Long.toHexString(j));
         while (hexString.length() < i) {
-            hexString = new StringBuffer().append("0").append(hexString).toString();
+            hexString.insert(0, "0");
         }
-        return hexString;
+        return hexString.toString();
     }
 
     public static void hexdump(int i, byte[] bArr, int i2) {
@@ -77,7 +77,7 @@ public class D {
                 if (i3 % 16 == 0) {
                     out.print("\n");
                 }
-                out.print(new StringBuffer().append(hex(bArr[i3], 2)).append(" ").toString());
+                out.print(hex(bArr[i3], 2) + " ");
             }
             out.print("\n");
         }

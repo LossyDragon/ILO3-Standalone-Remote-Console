@@ -18,6 +18,9 @@ import kotlin.system.exitProcess
  *
  * This program mimics https://github.com/scrapes/ILO2-Standalone-Remote-Console/ closely since ILO3 is basically
  * ILO2, but with json requests/responses
+ *
+ * Notes:
+ *      Regex find and replace: getLocalString\((.*?)\) -> $1
  */
 
 /** Global Variables **/

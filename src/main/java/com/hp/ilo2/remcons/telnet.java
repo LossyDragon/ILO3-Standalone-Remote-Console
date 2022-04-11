@@ -4,149 +4,134 @@ import com.hp.ilo2.intgapp.locinfo;
 import com.hp.ilo2.virtdevs.MediaAccess;
 import com.hp.ilo2.virtdevs.SCSI;
 import com.hp.ilo2.virtdevs.VErrorDialog;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Locale;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import java.util.Objects;
 
-/* loaded from: intgapp3_231.jar.application:com/hp/ilo2/remcons/telnet.class */
+
 public class telnet extends JPanel implements Runnable, MouseListener, FocusListener, KeyListener {
-    public static final int TELNET_PORT = 23;
-    public static final int TELNET_ENCRYPT = 192;
-    public static final int TELNET_CHG_ENCRYPT_KEYS = 193;
-    public static final int TELNET_SE = 240;
-    public static final int TELNET_NOP = 241;
-    public static final int TELNET_DM = 242;
-    public static final int TELNET_BRK = 243;
-    public static final int TELNET_IP = 244;
-    public static final int TELNET_AO = 245;
-    public static final int TELNET_AYT = 246;
-    public static final int TELNET_EC = 247;
-    public static final int TELNET_EL = 248;
-    public static final int TELNET_GA = 249;
-    public static final int TELNET_SB = 250;
-    public static final int TELNET_WILL = 251;
-    public static final int TELNET_WONT = 252;
-    public static final int TELNET_DO = 253;
-    public static final int TELNET_DONT = 254;
-    public static final int TELNET_IAC = 255;
-    public static final int JAP_VK_OPEN_BRACKET = 194;
-    public static final int JAP_VK_BACK_SLASH = 195;
-    public static final int JAP_VK_CLOSE_BRACKET = 196;
-    public static final int JAP_VK_COLON = 197;
-    public static final int JAP_VK_RO = 198;
+    
+    LocaleTranslator translator = new LocaleTranslator();
+    int ts_type;
+    private Aes aes128decrypter;
+    private Aes aes256decrypter;
+    private final Locale lo;
+    private Process rdpProc = null;
+    private RC4 RC4decrypter;
+    private final String keyboardLayout;
+    private final boolean crlf_enabled = false;
+    private boolean decryption_active = false;
+    private boolean enable_terminal_services = false;
+    private boolean screenFocusLost = false;
+    private boolean seized = false;
+    private final boolean tbm_mode = false;
+    private int japanese_kbd;
+    private int terminalServicesPort = 3389;
+    private final int total_count = 0;
+    private final int[] keyMap = new int[256];
+    private final int[] winkey_to_hid = {0, 0, 0, 0, 0, 0, 0, 0, 42, 43, 40, 0, 0, 40, 0, 0, 225, 224, 226, 72, 57, 0, 0, 0, 0, 0, 41, 41, 138, 139, 0, 0, 44, 75, 78, 77, 74, 80, 82, 79, 81, 0, 0, 0, 54, 45, 55, 56, 39, 30, 31, 32, 33, 34, 35, 36, 37, 38, 0, 51, 0, 46, 0, 0, 0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 47, 49, 48, 0, 0, 98, 89, 90, 91, 92, 93, 94, 95, 96, 97, 85, 87, 159, 86, 99, 84, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 0, 0, 0, 76, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 83, 71, 0, 0, 0, 0, 36, 37, 52, 54, 70, 73, 0, 0, 0, 0, 55, 47, 48, 228, 226, 230, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 51, 46, 54, 45, 55, 56, 53, 135, 48, 137, 50, 52, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 49, 48, 52, 0, 96, 90, 92, 94, 0, 0, 0, 0, 0, 0, 0, 139, 0, 0, 0, 0, 136, 136, 136, 53, 53, 0, 0, 0, 0, 0, 0, 0, 0, 138, 0, TELNET_IAC};
     private static final int CMD_TS_AVAIL = 194;
     private static final int CMD_TS_NOT_AVAIL = 195;
     private static final int CMD_TS_STARTED = 196;
     private static final int CMD_TS_STOPPED = 197;
-    protected dvcwin screen;
-    protected Thread receiver;
-    protected Socket s;
     protected DataInputStream in;
     protected DataOutputStream out;
-    protected int fore;
-    protected int back;
-    protected int hi_fore;
-    protected int hi_back;
-    protected String escseq;
+    protected Socket s;
     protected String curr_num;
-    private RC4 RC4decrypter;
-    private Aes aes128decrypter;
-    private Aes aes256decrypter;
-    int ts_type;
-    public remcons remconsObj;
-    private int japanese_kbd;
-    private Locale lo;
-    private String keyboardLayout;
-    protected String login = "";
+    protected String escseq;
     protected String host = "";
-    protected int port = 23;
-    protected int connected = 0;
-    protected int[] escseq_val = new int[10];
-    protected int escseq_val_count = 0;
-    private boolean crlf_enabled = false;
-    public boolean mirror = false;
-    protected byte[] decrypt_key = new byte[16];
-    private boolean decryption_active = false;
-    protected boolean encryption_enabled = false;
-    private Process rdpProc = null;
-    private boolean enable_terminal_services = false;
-    private int terminalServicesPort = 3389;
-    private boolean tbm_mode = false;
-    protected boolean dvc_mode = false;
+    protected String login = "";
+    protected Thread receiver;
     protected boolean dvc_encryption = false;
-    private int total_count = 0;
-    public byte[] sessionKey = new byte[32];
+    protected boolean dvc_mode = false;
+    protected boolean encryption_enabled = false;
+    protected byte[] decrypt_key = new byte[16];
+    protected dvcwin screen;
+    protected int back;
+    protected int connected = 0;
+    protected int escseq_val_count = 0;
+    protected int fore;
+    protected int hi_back;
+    protected int hi_fore;
+    protected int port = 23;
+    protected int[] escseq_val = new int[10];
+    public JLabel status_box = new JLabel();
     public String st_fld1 = "";
     public String st_fld2 = "";
     public String st_fld3 = "";
     public String st_fld4 = "";
+    public boolean mirror = false;
     public boolean post_complete = false;
-    private boolean seized = false;
-    public int dbg_print = 0;
-    LocaleTranslator translator = new LocaleTranslator();
-    private int[] keyMap = new int[256];
-    public final int PWR_OPTION_PULSE = 0;
-    public final int PWR_OPTION_HOLD = 1;
-    public final int PWR_OPTION_CYCLE = 2;
-    public final int PWR_OPTION_RESET = 3;
-    public int cipher = 0;
-    public final int CIPHER_NONE = 0;
-    public final int CIPHER_RC4 = 1;
-    public final int CIPHER_AES128 = 2;
-    public final int CIPHER_AES256 = 3;
+    public byte[] sessionKey = new byte[32];
+    public cmd cmdObj = new cmd();
     public final int AES_BITSIZE_128 = 0;
     public final int AES_BITSIZE_192 = 1;
     public final int AES_BITSIZE_256 = 2;
-    public final int REQ_LOGIN_KEY = 0;
-    public final int REQ_GET_AUTH = 1;
-    public final int REQ_SHARE = 2;
-    public final int REQ_SEIZE = 3;
-    public final int REQ_DONE = 4;
+    public final int CIPHER_AES128 = 2;
+    public final int CIPHER_AES256 = 3;
+    public final int CIPHER_NONE = 0;
+    public final int CIPHER_RC4 = 1;
     public final int CONNECT_CANCEL = 0;
     public final int CONNECT_SEIZE = 1;
     public final int CONNECT_SHARE = 2;
     public final int KEY_STATE_PRESSED = 0;
-    public final int KEY_STATE_TYPED = 1;
     public final int KEY_STATE_RELEASED = 2;
-    private boolean screenFocusLost = false;
-    private int[] winkey_to_hid = {0, 0, 0, 0, 0, 0, 0, 0, 42, 43, 40, 0, 0, 40, 0, 0, 225, 224, 226, 72, 57, 0, 0, 0, 0, 0, 41, 41, 138, 139, 0, 0, 44, 75, 78, 77, 74, 80, 82, 79, 81, 0, 0, 0, 54, 45, 55, 56, 39, 30, 31, 32, 33, 34, 35, 36, 37, 38, 0, 51, 0, 46, 0, 0, 0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 47, 49, 48, 0, 0, 98, 89, 90, 91, 92, 93, 94, 95, 96, 97, 85, 87, 159, 86, 99, 84, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 0, 0, 0, 76, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 83, 71, 0, 0, 0, 0, 36, 37, 52, 54, 70, 73, 0, 0, 0, 0, 55, 47, 48, 228, 226, 230, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 51, 46, 54, 45, 55, 56, 53, 135, 48, 137, 50, 52, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 49, 48, 52, 0, 96, 90, 92, 94, 0, 0, 0, 0, 0, 0, 0, 139, 0, 0, 0, 0, 136, 136, 136, 53, 53, 0, 0, 0, 0, 0, 0, 0, 0, 138, 0, TELNET_IAC};
-    public JLabel status_box = new JLabel();
-    public cmd cmdObj = new cmd();
+    public final int KEY_STATE_TYPED = 1;
+    public final int PWR_OPTION_CYCLE = 2;
+    public final int PWR_OPTION_HOLD = 1;
+    public final int PWR_OPTION_PULSE = 0;
+    public final int PWR_OPTION_RESET = 3;
+    public final int REQ_DONE = 4;
+    public final int REQ_GET_AUTH = 1;
+    public final int REQ_LOGIN_KEY = 0;
+    public final int REQ_SEIZE = 3;
+    public final int REQ_SHARE = 2;
+    public int cipher = 0;
+    public int dbg_print = 0;
+    public remcons remconsObj;
+    public static final int JAP_VK_BACK_SLASH = 195;
+    public static final int JAP_VK_CLOSE_BRACKET = 196;
+    public static final int JAP_VK_COLON = 197;
+    public static final int JAP_VK_OPEN_BRACKET = 194;
+    public static final int JAP_VK_RO = 198;
+    public static final int TELNET_AO = 245;
+    public static final int TELNET_AYT = 246;
+    public static final int TELNET_BRK = 243;
+    public static final int TELNET_CHG_ENCRYPT_KEYS = 193;
+    public static final int TELNET_DM = 242;
+    public static final int TELNET_DO = 253;
+    public static final int TELNET_DONT = 254;
+    public static final int TELNET_EC = 247;
+    public static final int TELNET_EL = 248;
+    public static final int TELNET_ENCRYPT = 192;
+    public static final int TELNET_GA = 249;
+    public static final int TELNET_IAC = 255;
+    public static final int TELNET_IP = 244;
+    public static final int TELNET_NOP = 241;
+    public static final int TELNET_PORT = 23;
+    public static final int TELNET_SB = 250;
+    public static final int TELNET_SE = 240;
+    public static final int TELNET_WILL = 251;
+    public static final int TELNET_WONT = 252;
 
     public void setLocale(String str) {
         this.translator.selectLocale(str);
     }
-
-    public String getLocalString(int i) {
-        String str = "";
-        try {
-            str = this.remconsObj.ParentApp.locinfoObj.getLocString(i);
-        } catch (Exception e) {
-            System.out.println(new StringBuffer().append("telnet:getLocalString").append(e.getMessage()).toString());
-        }
-        return str;
-    }
-
+    
     public telnet(remcons remconsVar) {
         this.japanese_kbd = 0;
         this.remconsObj = remconsVar;
         this.screen = new dvcwin(1024, 768, this.remconsObj);
-        System.out.println(new StringBuffer().append("Screen: ").append(this.screen).toString());
+        System.out.println("Screen: " + this.screen);
         this.screen.addMouseListener(this);
         addFocusListener(this);
         this.screen.addFocusListener(this);
@@ -156,7 +141,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         setBackground(Color.black);
         setLayout(new BorderLayout());
         add(this.screen, "North");
-        set_status(1, getLocalString(locinfo.STATUSSTR_300d));
+        set_status(1, locinfo.STATUSSTR_300d);
         set_status(2, "          ");
         set_status(3, "          ");
         set_status(4, "          ");
@@ -168,7 +153,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         }
         this.lo = Locale.getDefault();
         this.keyboardLayout = this.lo.toString();
-        System.out.println(new StringBuffer().append("telent lang: Keyboard layout is ").append(this.keyboardLayout).toString());
+        System.out.println("telent lang: Keyboard layout is " + this.keyboardLayout);
         if (this.keyboardLayout.startsWith("ja")) {
             System.out.println("JAPANESE LANGUAGE \n");
             this.japanese_kbd = 1;
@@ -192,49 +177,49 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
             } else if (this.ts_type == 1) {
                 str = "vnc";
             } else {
-                str = new StringBuffer().append("type").append(this.ts_type).toString();
+                str = "type" + this.ts_type;
             }
-            String property = remcons.prop.getProperty(new StringBuffer().append(str).append(".program").toString());
-            System.out.println(new StringBuffer().append(str).append(" = ").append(property).toString());
+            String property = remcons.prop.getProperty(str + ".program");
+            System.out.println(str + " = " + property);
             if (property != null) {
                 String percent_sub = percent_sub(property);
-                System.out.println(new StringBuffer().append("exec: ").append(percent_sub).toString());
+                System.out.println("exec: " + percent_sub);
                 try {
                     this.rdpProc = runtime.exec(percent_sub);
                 } catch (IOException e) {
-                    System.out.println(new StringBuffer().append("IOException: ").append(e.getMessage()).append(":: ").append(percent_sub).toString());
+                    System.out.println("IOException: " + e.getMessage() + ":: " + percent_sub);
                 } catch (SecurityException e2) {
-                    System.out.println(new StringBuffer().append("SecurityException: ").append(e2.getMessage()).append(":: Attempting to launch ").append(percent_sub).toString());
+                    System.out.println("SecurityException: " + e2.getMessage() + ":: Attempting to launch " + percent_sub);
                 }
             } else {
                 boolean z = false;
                 try {
-                    System.out.println(new StringBuffer().append("Executing mstsc. Port is ").append(this.terminalServicesPort).toString());
-                    this.rdpProc = runtime.exec(new StringBuffer().append("mstsc /f /console /v:").append(this.host).append(":").append(this.terminalServicesPort).toString());
+                    System.out.println("Executing mstsc. Port is " + this.terminalServicesPort);
+                    this.rdpProc = runtime.exec("mstsc /f /console /v:" + this.host + ":" + this.terminalServicesPort);
                 } catch (IOException e3) {
-                    System.out.println(new StringBuffer().append("IOException: ").append(e3.getMessage()).append(":: mstsc not found in system directory. Looking in \\Program Files\\Remote Desktop.").toString());
+                    System.out.println("IOException: " + e3.getMessage() + ":: mstsc not found in system directory. Looking in \\Program Files\\Remote Desktop.");
                     z = true;
                 } catch (SecurityException e4) {
-                    System.out.println(new StringBuffer().append("SecurityException: ").append(e4.getMessage()).append(":: Attempting to launch mstsc.").toString());
+                    System.out.println("SecurityException: " + e4.getMessage() + ":: Attempting to launch mstsc.");
                 }
                 if (z) {
                     z = false;
                     try {
-                        this.rdpProc = runtime.exec(new String[]{new StringBuffer().append("\\Program Files\\Remote Desktop\\mstsc /f /console /v:").append(this.host).append(":").append(this.terminalServicesPort).toString()});
+                        this.rdpProc = runtime.exec(new String[]{"\\Program Files\\Remote Desktop\\mstsc /f /console /v:" + this.host + ":" + this.terminalServicesPort});
                     } catch (IOException e5) {
-                        System.out.println(new StringBuffer().append("IOException: ").append(e5.getMessage()).append(":: Unable to find mstsc. Verify that Terminal Services client is installed.").toString());
+                        System.out.println("IOException: " + e5.getMessage() + ":: Unable to find mstsc. Verify that Terminal Services client is installed.");
                         z = true;
                     } catch (SecurityException e6) {
-                        System.out.println(new StringBuffer().append("SecurityException: ").append(e6.getMessage()).append(":: Attempting to launch mstsc.").toString());
+                        System.out.println("SecurityException: " + e6.getMessage() + ":: Attempting to launch mstsc.");
                     }
                 }
                 if (z) {
                     try {
                         this.rdpProc = runtime.exec(new String[]{"\\Program Files\\Terminal Services Client\\mstsc"});
                     } catch (IOException e7) {
-                        System.out.println(new StringBuffer().append("IOException: ").append(e7.getMessage()).append(":: Unable to find mstsc. Verify that Terminal Services client is installed.").toString());
+                        System.out.println("IOException: " + e7.getMessage() + ":: Unable to find mstsc. Verify that Terminal Services client is installed.");
                     } catch (SecurityException e8) {
-                        System.out.println(new StringBuffer().append("SecurityException: ").append(e8.getMessage()).append(":: Attempting to launch mstsc.").toString());
+                        System.out.println("SecurityException: " + e8.getMessage() + ":: Attempting to launch mstsc.");
                     }
                 }
             }
@@ -307,7 +292,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                 this.st_fld4 = str;
                 break;
         }
-        this.status_box.setText(new StringBuffer().append(this.st_fld1).append(" ").append(this.st_fld2).append("      ").append(this.st_fld3).append("      ").append(this.st_fld4).toString());
+        this.status_box.setText(this.st_fld1 + " " + this.st_fld2 + "      " + this.st_fld3 + "      " + this.st_fld4);
     }
 
     public void reinit_vars() {
@@ -322,6 +307,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         this.aes256decrypter = new Aes(0, bArr);
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public synchronized void connect(String str, String str2, int i, int i2, int i3, remcons remconsVar) {
         this.enable_terminal_services = (i2 & 1) == 1;
         this.ts_type = i2 >> 8;
@@ -341,15 +327,15 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
             if (str3 != null) {
                 try {
                     this.port = Integer.parseInt(str3);
-                    System.out.println(new StringBuffer().append("RC port number ").append(this.port).toString());
+                    System.out.println("RC port number " + this.port);
                 } catch (NumberFormatException e) {
                     System.out.println("Failed to read rcport from parameters");
                     this.port = 23;
                 }
             }
             try {
-                set_status(1, getLocalString(locinfo.STATUSSTR_3008));
-                System.out.println(new StringBuffer().append("updated: connecting to ").append(this.host).append(":").append(this.port).toString());
+                set_status(1, locinfo.STATUSSTR_3008);
+                System.out.println("updated: connecting to " + this.host + ":" + this.port);
                 try {
                     Thread.currentThread();
                     Thread.sleep(1000L);
@@ -362,14 +348,14 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                     System.out.println("set TcpNoDelay");
                     this.s.setTcpNoDelay(true);
                 } catch (SocketException e3) {
-                    System.out.println(new StringBuffer().append("telnet.connect() linger SocketException: ").append(e3).toString());
+                    System.out.println("telnet.connect() linger SocketException: " + e3);
                 }
                 this.in = new DataInputStream(this.s.getInputStream());
                 this.out = new DataOutputStream(this.s.getOutputStream());
                 if (this.in.readByte() == 80) {
-                    set_status(1, getLocalString(locinfo.STATUSSTR_3009));
+                    set_status(1, locinfo.STATUSSTR_3009);
                     System.out.println("Received hello byte. Requesting remote connection...");
-                    if (requestRemoteConnection(locinfo.DIALOGSTR_2001)) {
+                    if (requestRemoteConnection(/* Magic Number */ 8193)) {
                         this.receiver = new Thread(this);
                         this.receiver.setName("telnet_rcvr");
                         this.receiver.start();
@@ -378,11 +364,11 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                         remconsVar.ParentApp.stop();
                     }
                 } else {
-                    set_status(1, getLocalString(locinfo.STATUSSTR_300a));
+                    set_status(1, locinfo.STATUSSTR_300a);
                     System.out.println("Socket connection failure... ");
                 }
             } catch (SocketException e4) {
-                System.out.println(new StringBuffer().append("telnet.connect() SocketException: ").append(e4).toString());
+                System.out.println("telnet.connect() SocketException: " + e4);
                 set_status(1, e4.toString());
                 this.s = null;
                 this.in = null;
@@ -390,7 +376,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                 this.receiver = null;
                 this.connected = 0;
             } catch (UnknownHostException e5) {
-                System.out.println(new StringBuffer().append("telnet.connect() UnknownHostException: ").append(e5).toString());
+                System.out.println("telnet.connect() UnknownHostException: " + e5);
                 set_status(1, e5.toString());
                 this.s = null;
                 this.in = null;
@@ -398,7 +384,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                 this.receiver = null;
                 this.connected = 0;
             } catch (IOException e6) {
-                System.out.println(new StringBuffer().append("telnet.connect() IOException: ").append(e6).toString());
+                System.out.println("telnet.connect() IOException: " + e6);
                 set_status(1, e6.toString());
                 this.s = null;
                 this.in = null;
@@ -420,12 +406,12 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
             if (!(z2)) {
                 bArr[0] = (byte) (i & TELNET_IAC);
                 bArr[1] = (byte) ((i & 65280) >>> 8);
-                if (this.remconsObj.ParentApp.optional_features.indexOf("ENCRYPT_KEY") != -1) {
+                if (this.remconsObj.ParentApp.optional_features.contains("ENCRYPT_KEY")) {
                     for (int i3 = 0; i3 < this.sessionKey.length; i3++) {
                         byte[] bArr2 = this.sessionKey;
                         bArr2[i3] = (byte) (bArr2[i3] ^ ((byte) this.remconsObj.ParentApp.enc_key.charAt(i3 % this.remconsObj.ParentApp.enc_key.length())));
                     }
-                    if (this.remconsObj.ParentApp.optional_features.indexOf("ENCRYPT_VMKEY") != -1) {
+                    if (this.remconsObj.ParentApp.optional_features.contains("ENCRYPT_VMKEY")) {
                         bArr[1] = (byte) (bArr[1] | 64);
                     } else {
                         bArr[1] = (byte) (bArr[1] | 128);
@@ -442,19 +428,19 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                     switch (readByte) {
                         case 81:
                             System.out.println("Access denied.");
-                            set_status(1, getLocalString(locinfo.STATUSSTR_300b));
+                            set_status(1, locinfo.STATUSSTR_300b);
                             if (null != this.remconsObj.ParentApp.dispFrame) {
-                                new VErrorDialog(this.remconsObj.ParentApp.dispFrame, getLocalString(locinfo.DIALOGSTR_202f), getLocalString(locinfo.DIALOGSTR_205f), true);
+                                new VErrorDialog(this.remconsObj.ParentApp.dispFrame, locinfo.DIALOGSTR_202f, locinfo.DIALOGSTR_205f, true);
                                 this.remconsObj.ParentApp.dispFrame.setVisible(false);
                             } else {
-                                new VErrorDialog(getLocalString(locinfo.DIALOGSTR_205f), true);
+                                new VErrorDialog(locinfo.DIALOGSTR_205f, true);
                             }
                             z = false;
                             z2 = true;
                             this.remconsObj.ParentApp.stop();
                             continue;
                         case 82:
-                            set_status(1, getLocalString(locinfo.STATUSSTR_300c));
+                            set_status(1, locinfo.STATUSSTR_300c);
                             System.out.println("Authenticated");
                             z = true;
                             this.remconsObj.licensed = true;
@@ -465,7 +451,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                             System.out.println("Authenticated, but busy, negotiating");
                             if (0 == this.remconsObj.retry_connection_count) {
                                 i2 = negotiateBusy();
-                                System.out.println(new StringBuffer().append("negotiateResult:").append(i2).toString());
+                                System.out.println("negotiateResult:" + i2);
                             } else {
                                 System.out.println("Overriding seize option for internal retry");
                                 i2 = 1;
@@ -487,7 +473,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                                     System.out.println("Seizing connection, sending command 0x0055");
                                     transmit(new String(bArr4));
                                     z2 = true;
-                                    set_status(1, getLocalString(locinfo.STATUSSTR_3118));
+                                    set_status(1, locinfo.STATUSSTR_3118);
                                     continue;
                                 case 2:
                                     bArr[0] = 86;
@@ -505,7 +491,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                         case SCSI.SCSI_MODE_SELECT /* 85 */:
                         case 86:
                         default:
-                            System.out.println(new StringBuffer().append("rqrmtconn default: ").append((int) readByte).toString());
+                            System.out.println("rqrmtconn default: " + (int) readByte);
                             z = true;
                             z2 = true;
                             continue;
@@ -518,21 +504,19 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                         case 88:
                             System.out.println("No free Sessions Notification");
                             if (null != this.remconsObj.ParentApp.dispFrame) {
-                                new VErrorDialog(this.remconsObj.ParentApp.dispFrame, getLocalString(locinfo.DIALOGSTR_202f), getLocalString(locinfo.DIALOGSTR_2030), true);
+                                new VErrorDialog(this.remconsObj.ParentApp.dispFrame, locinfo.DIALOGSTR_202f, locinfo.DIALOGSTR_2030, true);
                                 this.remconsObj.ParentApp.dispFrame.setVisible(false);
                             } else {
-                                new VErrorDialog(getLocalString(locinfo.DIALOGSTR_2030), true);
+                                new VErrorDialog(locinfo.DIALOGSTR_2030, true);
                             }
                             z = false;
                             z2 = true;
                             this.remconsObj.ParentApp.stop();
-                            continue;
                     }
                 } catch (IOException e) {
                     z = false;
                     z2 = true;
                     System.out.println("Socket Read failed.");
-                    continue;
                 }
             } else if (z2) {
                 z = false;
@@ -543,26 +527,25 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                     switch (this.in.readByte()) {
                         case 81:
                             if (null != this.remconsObj.ParentApp.dispFrame) {
-                                new VErrorDialog(this.remconsObj.ParentApp.dispFrame, getLocalString(locinfo.DIALOGSTR_202f), getLocalString(locinfo.DIALOGSTR_2047), true);
+                                new VErrorDialog(this.remconsObj.ParentApp.dispFrame, locinfo.DIALOGSTR_202f, locinfo.DIALOGSTR_2047, true);
                                 this.remconsObj.ParentApp.dispFrame.setVisible(false);
                             } else {
-                                new VErrorDialog(getLocalString(locinfo.DIALOGSTR_2047), true);
+                                new VErrorDialog(locinfo.DIALOGSTR_2047, true);
                             }
                             z = false;
                             continue;
                         case 82:
                             this.remconsObj.ParentApp.moveUItoInit(true);
                             z = true;
-                            continue;
                     }
                 } catch (IOException e2) {
                     z = false;
                     z2 = true;
                     System.out.println("Socket Read failed.");
-                    continue;
                 }
             }
         }
+
         return z;
     }
 
@@ -602,7 +585,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                     System.out.println("Closing socket");
                     this.s.close();
                 } catch (IOException e) {
-                    System.out.println(new StringBuffer().append("telnet.disconnect() IOException: ").append(e).toString());
+                    System.out.println("telnet.disconnect() IOException: " + e);
                     set_status(1, e.toString());
                 }
             }
@@ -612,7 +595,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
             if (this.cmdObj != null) {
                 this.cmdObj.disconnectCmd();
             }
-            set_status(1, getLocalString(locinfo.STATUSSTR_300d));
+            set_status(1, locinfo.STATUSSTR_300d);
             reinit_vars();
             this.decryption_active = false;
         }
@@ -627,7 +610,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
             try {
                 this.out.write(bArr, 0, bArr.length);
             } catch (IOException e) {
-                System.out.println(new StringBuffer().append("telnet.transmit() IOException: ").append(e).toString());
+                System.out.println("telnet.transmit() IOException: " + e);
             }
         }
     }
@@ -662,11 +645,9 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
 
     public synchronized String translate_special_key(KeyEvent keyEvent) {
         String str = "";
-        switch (keyEvent.getKeyCode()) {
-            case MediaAccess.F5_180_512 /* 9 */:
-                keyEvent.consume();
-                str = "\t";
-                break;
+        if (keyEvent.getKeyCode() == MediaAccess.F5_180_512) {
+            keyEvent.consume();
+            str = "\t";
         }
         return str;
     }
@@ -679,7 +660,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         return true;
     }
 
-    @Override // java.lang.Runnable
+    @Override
     public void run() {
         int i;
         boolean z = false;
@@ -724,7 +705,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                                 this.dvc_mode = process_dvc(c);
                                 if (!this.dvc_mode) {
                                     System.out.println("DVC mode turned off");
-                                    set_status(1, getLocalString(locinfo.STATUSSTR_300e));
+                                    set_status(1, locinfo.STATUSSTR_300e);
                                 }
                             } else if (c == 27) {
                                 z = true;
@@ -733,35 +714,34 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                             } else if (z && c == 'R') {
                                 this.dvc_mode = true;
                                 this.dvc_encryption = true;
-                                set_status(1, getLocalString(locinfo.STATUSSTR_300f));
+                                set_status(1, locinfo.STATUSSTR_300f);
                             } else if (z && c == 'r') {
                                 this.dvc_mode = true;
                                 this.dvc_encryption = false;
-                                set_status(1, getLocalString(locinfo.STATUSSTR_3004));
+                                set_status(1, locinfo.STATUSSTR_3004);
                             } else {
                                 z = false;
                             }
                         }
                     } else if (i2 > 1) {
-                        System.out.println(new StringBuffer().append("Reading from stream failed for  ").append(i2).append("times").toString());
+                        System.out.println("Reading from stream failed for  " + i2 + "times");
                     }
                 }
             }
         } catch (Exception e) {
-            System.out.println(new StringBuffer().append("telnet.run() Exception, class:").append(e.getClass()).append("  msg:").append(e.getMessage()).toString());
+            System.out.println("telnet.run() Exception, class:" + e.getClass() + "  msg:" + e.getMessage());
             e.printStackTrace();
         } finally {
             if (!this.seized) {
                 int i6 = this.remconsObj.retry_connection_count;
                 remcons remconsVar3 = this.remconsObj;
+                this.screen.clearScreen();
                 if (i6 < 3) {
-                    this.screen.clearScreen();
                     System.out.println("Retrying connection");
-                    set_status(1, getLocalString(locinfo.STATUSSTR_3011));
+                    set_status(1, locinfo.STATUSSTR_3011);
                 } else {
-                    this.screen.clearScreen();
                     System.out.println("offline");
-                    set_status(1, getLocalString(locinfo.STATUSSTR_300d));
+                    set_status(1, locinfo.STATUSSTR_300d);
                 }
                 set_status(2, "");
                 set_status(3, "");
@@ -783,11 +763,11 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         Object[] objArr = {Boolean.TRUE};
         try {
             obj.getClass().getMethod("setFocusTraversalKeysEnabled", clsArr).invoke(obj, Boolean.FALSE);
-        } catch (Throwable th) {
+        } catch (Throwable ignored) {
         }
         try {
             obj.getClass().getMethod("setFocusCycleRoot", clsArr).invoke(obj, objArr);
-        } catch (Throwable th2) {
+        } catch (Throwable ignored) {
         }
     }
 
@@ -808,7 +788,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         System.out.println("Received seize command. halting RC.");
         this.seized = true;
         this.screen.clearScreen();
-        set_status(1, getLocalString(locinfo.STATUSSTR_3012));
+        set_status(1, locinfo.STATUSSTR_3012);
         set_status(2, "");
         set_status(3, "");
         set_status(4, "");
@@ -818,7 +798,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         System.out.println("Received FW Upgrade notification. Halting RC.");
         this.seized = true;
         this.screen.clearScreen();
-        set_status(1, getLocalString(locinfo.STATUSSTR_3013));
+        set_status(1, locinfo.STATUSSTR_3013);
         set_status(2, "");
         set_status(3, "");
         set_status(4, "");
@@ -828,7 +808,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         System.out.println("Received UnlicensedAccess. Halting RC.");
         this.seized = true;
         this.screen.clearScreen();
-        set_status(1, getLocalString(locinfo.DIALOGSTR_202c));
+        set_status(1, locinfo.DIALOGSTR_202c);
         set_status(2, "");
         set_status(3, "");
         set_status(4, "");
@@ -838,14 +818,14 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         System.out.println("Received unAuthAccess notification. Halting RC.");
         this.seized = true;
         this.screen.clearScreen();
-        set_status(1, getLocalString(locinfo.STATUSSTR_3014));
+        set_status(1, locinfo.STATUSSTR_3014);
         set_status(2, "");
         set_status(3, "");
         set_status(4, "");
     }
 
     public String percent_sub(String str) {
-        StringBuffer stringBuffer = new StringBuffer();
+        StringBuilder stringBuffer = new StringBuilder();
         int i = 0;
         while (i < str.length()) {
             char charAt = str.charAt(i);
@@ -873,11 +853,11 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
 
     public byte[] getSessionKey(String str) {
         String parseParameter = parseParameter(str, "sessionKey");
-        if (parseParameter == "") {
+        if (Objects.equals(parseParameter, "")) {
             System.out.println("Parsing failed.");
         }
         byte[] bytes = parseParameter.getBytes();
-        System.out.println(new StringBuffer().append("sessionKey : ").append(parseParameter).toString());
+        System.out.println("sessionKey : " + parseParameter);
         return bytes;
     }
 
@@ -949,6 +929,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         keyEvent.consume();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void sendCtrlAltDel() {
         byte[] bArr = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         bArr[2] = 5;
@@ -988,11 +969,12 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
     }
 
     public synchronized void sendKey(KeyEvent keyEvent, int i) {
-        if (!this.remconsObj.kbHookInstalled || true != this.remconsObj.kbHookDataRcvd) {
+        if (!this.remconsObj.kbHookInstalled || !this.remconsObj.kbHookDataRcvd) {
             handleKey(keyEvent, i);
         }
     }
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     public void handleKey(KeyEvent keyEvent, int i) {
         byte[] bArr = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         boolean z = false;
@@ -1037,7 +1019,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                         keyCode = 45;
                         break;
                     default:
-                        System.out.println(new StringBuffer().append("Unknown key ").append(keyCode).toString());
+                        System.out.println("Unknown key " + keyCode);
                         keyCode = 0;
                         break;
                 }
@@ -1050,11 +1032,10 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                 case 92:
                     if ('_' == keyEvent.getKeyChar()) {
                         keyCode = 198;
-                        break;
                     } else {
                         keyCode = 195;
-                        break;
                     }
+                    break;
                 case 93:
                     keyCode = 196;
                     break;
@@ -1085,13 +1066,13 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                 if (this.keyMap[i3] == 1) {
                     byte b = (byte) this.winkey_to_hid[i3];
                     if (b == 224) {
-                        z |= true;
+                        z = true;
                     }
                     if (b == 226) {
-                        z |= true;
+                        z = true;
                     }
                     if (b == 76) {
-                        z |= true;
+                        z = true;
                     }
                     if ((b & 224) == 224) {
                         bArr[2] = (byte) (bArr[2] | ((byte) (1 << ((byte) (b ^ 224)))));
@@ -1149,15 +1130,14 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         return z;
     }
 
-    /* loaded from: intgapp3_231.jar.application:com/hp/ilo2/remcons/telnet$statusUpdateTimer.class */
-    class statusUpdateTimer implements TimerListener {
+    static class statusUpdateTimer implements TimerListener {
         private final telnet this$0;
 
         statusUpdateTimer(telnet telnetVar) {
             this.this$0 = telnetVar;
         }
 
-        @Override // com.hp.ilo2.remcons.TimerListener
+        @Override
         public void timeout(Object obj) {
             System.out.println("Video data reception timeout occurred. Clearing status.");
             this.this$0.set_status(1, " ");
@@ -1167,7 +1147,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
     public void printByteArray(byte[] bArr, int i) {
         if (i >= 0) {
             for (int i2 = 0; i2 < i; i2++) {
-                System.out.print(new StringBuffer().append("0x").append(Integer.toHexString(bArr[i2])).append(" ").toString());
+                System.out.print("0x" + Integer.toHexString(bArr[i2]) + " ");
             }
             System.out.println("\n");
         }
@@ -1175,7 +1155,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
 
     public String parseParameter(String str, String str2) {
         String str3 = "";
-        System.out.println(new StringBuffer().append("Invoking url's query: ").append(str).toString());
+        System.out.println("Invoking url's query: " + str);
         if (str == null) {
             return str3;
         }
@@ -1186,7 +1166,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                 break;
             }
             String[] split2 = split[i].split("[=]");
-            if (split2[0] == str2) {
+            if (Objects.equals(split2[0], str2)) {
                 str3 = split2[1];
                 break;
             }

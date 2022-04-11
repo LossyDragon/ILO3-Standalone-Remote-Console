@@ -58,7 +58,7 @@ public class MouseSync implements MouseListener, MouseMotionListener, MouseWheel
     public static final int MOUSE_BUTTON_RIGHT = 1;
     private int pressed_button;
     private boolean dragging;
-    private Object mutex;
+    private final Object mutex;
     private boolean debug_msg = false;
     private int state = 0;
 
@@ -210,7 +210,7 @@ public class MouseSync implements MouseListener, MouseMotionListener, MouseWheel
                 this.send_dx_count = 0;
             } else if (this.send_dx_count >= 4) {
                 if (this.debug_msg) {
-                    System.out.println(new StringBuffer().append("no x sync:").append(this.send_dx[this.send_dx_index]).toString());
+                    System.out.println("no x sync:" + this.send_dx[this.send_dx_index]);
                 }
                 go_state(2);
                 return;
@@ -228,7 +228,7 @@ public class MouseSync implements MouseListener, MouseMotionListener, MouseWheel
                 this.send_dy_count = 0;
             } else if (this.send_dy_count >= 4) {
                 if (this.debug_msg) {
-                    System.out.println(new StringBuffer().append("no y sync:").append(this.send_dy[this.send_dy_index]).toString());
+                    System.out.println("no y sync:" + this.send_dy[this.send_dy_index]);
                 }
                 go_state(2);
                 return;
@@ -406,7 +406,6 @@ public class MouseSync implements MouseListener, MouseMotionListener, MouseWheel
             case 13:
             case CMD_ALIGN :
             default:
-                return;
         }
     }
 
@@ -444,11 +443,10 @@ public class MouseSync implements MouseListener, MouseMotionListener, MouseWheel
             case 3:
                 if (i2 > TIMEOUT_SYNC || i3 > TIMEOUT_SYNC) {
                     go_state(3);
-                    return;
                 } else {
                     sync_update(i2, i3);
-                    return;
                 }
+                return;
             case 4:
                 this.server_w = i2;
                 this.server_h = i3;
@@ -471,7 +469,6 @@ public class MouseSync implements MouseListener, MouseMotionListener, MouseWheel
             case 13:
                 this.client_x = mouseEvent.getX();
                 this.client_y = mouseEvent.getY();
-                return;
         }
     }
 
@@ -605,7 +602,6 @@ public class MouseSync implements MouseListener, MouseMotionListener, MouseWheel
                 move_server(true, true);
                 return;
             default:
-                return;
         }
     }
 
@@ -743,7 +739,6 @@ public class MouseSync implements MouseListener, MouseMotionListener, MouseWheel
                 this.client_dx = this.client_x - this.server_x;
                 this.client_dy = this.server_y - this.client_y;
                 move_server(true, false);
-                return;
         }
     }
 

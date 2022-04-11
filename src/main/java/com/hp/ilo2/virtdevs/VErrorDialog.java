@@ -1,6 +1,5 @@
 package com.hp.ilo2.virtdevs;
 
-import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -15,21 +14,12 @@ import javax.swing.JPanel;
 
 
 public class VErrorDialog extends JDialog implements ActionListener {
-    JPanel mainPanel;
-    JLabel txt;
+
     JButton ok;
+    JLabel txt;
+    JPanel mainPanel;
     boolean disp;
     virtdevs virtdevsObj;
-
-    public String getLocalString(int i) {
-        String str = "";
-        try {
-            str = this.virtdevsObj.ParentApp.locinfoObj.getLocString(i);
-        } catch (Exception e) {
-            System.out.println(new StringBuffer().append("VSeizeDialog:getLocalString").append(e.getMessage()).toString());
-        }
-        return str;
-    }
 
     public VErrorDialog(JFrame jFrame, String str) {
         super(jFrame, "Error", true);
@@ -58,7 +48,7 @@ public class VErrorDialog extends JDialog implements ActionListener {
         this.mainPanel.add(this.txt);
         this.mainPanel.setPreferredSize(this.mainPanel.getPreferredSize());
         JPanel jPanel = new JPanel();
-        jPanel.setLayout(new FlowLayout(2));
+        jPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
         this.ok = new JButton("    OK    ");
         this.ok.addActionListener(this);
         jPanel.add(this.ok);
@@ -78,7 +68,7 @@ public class VErrorDialog extends JDialog implements ActionListener {
         add(jPanel, gridBagConstraints);
         setSize(this.mainPanel.getPreferredSize().width + 40, this.mainPanel.getPreferredSize().height + 100);
         setResizable(false);
-        setLocationRelativeTo((Component) null);
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 

@@ -1,13 +1,14 @@
 package com.hp.ilo2.remcons;
 
 import com.hp.ilo2.intgapp.locinfo;
-import com.hp.ilo2.virtdevs.MediaAccess;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 
 public class cmd implements Runnable {
@@ -32,7 +33,7 @@ public class cmd implements Runnable {
             try {
                 this.out.write(bArr, 0, bArr.length);
             } catch (IOException e) {
-                System.out.println(new StringBuffer().append("telnet.transmit() IOException: ").append(e).toString());
+                System.out.println("telnet.transmit() IOException: " + e);
             }
         }
     }
@@ -41,7 +42,7 @@ public class cmd implements Runnable {
         try {
             this.out.write(bArr, 0, i);
         } catch (IOException e) {
-            System.out.println(new StringBuffer().append("cmd.transmitb() IOException: ").append(e).toString());
+            System.out.println("cmd.transmitb() IOException: " + e);
         }
     }
 
@@ -105,11 +106,11 @@ public class cmd implements Runnable {
                     }
                     case 5: {
                         if (this.cmdHandler.session.post_complete) break;
-                        CharSequence charSequence = new StringBuffer(16);
+                        StringBuilder charSequence = new StringBuilder(16);
                         n3 = this.in.read(byArray4, 0, 2);
                         String string4 = Integer.toHexString(0xFF & byArray4[1]).toUpperCase();
                         String string2 = Integer.toHexString(0xFF & byArray4[0]).toUpperCase();
-                        String string3 = ((StringBuffer)charSequence).append(this.cmdHandler.getLocalString(12582)).append(string4).append(string2).toString();
+                        String string3 = charSequence.append(locinfo.STATUSSTR_3126).append(string4).append(string2).toString();
                         this.cmdHandler.session.set_status(4, string3);
                         break;
                     }
@@ -117,15 +118,15 @@ public class cmd implements Runnable {
                         String string4;
                         System.out.println("Seized command notification\n");
                         n3 = this.in.read(byArray4, 0, 128);
-                        CharSequence charSequence = "UNKNOWN";
+                        String charSequence = "UNKNOWN";
                         String string3 = "UNKNOWN";
-                        System.out.println("Data rcvd for acquire " + byArray4 + "rd count " + n3);
+                        System.out.println("Data rcvd for acquire " + Arrays.toString(byArray4) + "rd count " + n3);
                         if (n3 > 0) {
                             string4 = new String(byArray4);
                             System.out.println("Pakcet " + string4);
                             charSequence = string4.substring(0, 63).trim();
                             string3 = string4.substring(64, 127).trim();
-                            if (((String)charSequence).length() <= 0) {
+                            if (charSequence.length() <= 0) {
                                 charSequence = "UNKNOWN";
                             }
                             if (string3.length() <= 0) {
@@ -134,7 +135,7 @@ public class cmd implements Runnable {
                         } else {
                             System.out.println("Invalid acquire info");
                         }
-                        if ((n = this.cmdHandler.seize_dialog((String)charSequence, string3, s)) == 0) {
+                        if ((n = this.cmdHandler.seize_dialog(charSequence, string3, s)) == 0) {
                             this.sendBool(true);
                             this.cmdHandler.seize_confirmed();
                             break;
@@ -223,8 +224,7 @@ public class cmd implements Runnable {
             }
         }
         catch (Exception exception) {
-            System.out.println("CMD exception: " + exception.toString());
-            return;
+            System.out.println("CMD exception: " + exception);
         }
     }
 
@@ -237,7 +237,7 @@ public class cmd implements Runnable {
             try {
                 this.s.setSoLinger(true, 0);
             } catch (SocketException e) {
-                System.out.println(new StringBuffer().append("connectCmd linger SocketException: ").append(e).toString());
+                System.out.println("connectCmd linger SocketException: " + e);
             }
             this.in = new DataInputStream(this.s.getInputStream());
             this.out = new DataOutputStream(this.s.getOutputStream());
@@ -245,11 +245,11 @@ public class cmd implements Runnable {
                 bArr2[0] = 2;
                 bArr2[1] = 32;
                 byte[] bytes = remconsVar.ParentApp.getParameter("RCINFO1").getBytes();
-                if (remconsVar.ParentApp.optional_features.indexOf("ENCRYPT_KEY") != -1) {
+                if (remconsVar.ParentApp.optional_features.contains("ENCRYPT_KEY")) {
                     for (int i2 = 0; i2 < bytes.length; i2++) {
                         bytes[i2] = (byte) (bytes[i2] ^ ((byte) remconsVar.ParentApp.enc_key.charAt(i2 % remconsVar.ParentApp.enc_key.length())));
                     }
-                    if (remconsVar.ParentApp.optional_features.indexOf("ENCRYPT_VMKEY") != -1) {
+                    if (remconsVar.ParentApp.optional_features.contains("ENCRYPT_VMKEY")) {
                         bArr2[1] = (byte) (bArr2[1] | 64);
                     } else {
                         bArr2[1] = (byte) (bArr2[1] | 128);
@@ -265,14 +265,14 @@ public class cmd implements Runnable {
                     this.receiver.setName("cmd_rcvr");
                     this.receiver.start();
                 } else {
-                    System.out.println(new StringBuffer().append("login failed. read data").append((int) readByte).toString());
+                    System.out.println("login failed. read data" + readByte);
                 }
             } else {
                 System.out.println("Socket connection failure... ");
             }
             return true;
         } catch (SocketException e2) {
-            System.out.println(new StringBuffer().append("telnet.connect() SocketException: ").append(e2).toString());
+            System.out.println("telnet.connect() SocketException: " + e2);
             this.s = null;
             this.in = null;
             this.out = null;
@@ -280,7 +280,7 @@ public class cmd implements Runnable {
             this.connected = 0;
             return true;
         } catch (UnknownHostException e3) {
-            System.out.println(new StringBuffer().append("telnet.connect() UnknownHostException: ").append(e3).toString());
+            System.out.println("telnet.connect() UnknownHostException: " + e3);
             this.s = null;
             this.in = null;
             this.out = null;
@@ -288,7 +288,7 @@ public class cmd implements Runnable {
             this.connected = 0;
             return true;
         } catch (IOException e4) {
-            System.out.println(new StringBuffer().append("telnet.connect() IOException: ").append(e4).toString());
+            System.out.println("telnet.connect() IOException: " + e4);
             this.s = null;
             this.in = null;
             this.out = null;
@@ -308,7 +308,7 @@ public class cmd implements Runnable {
                 System.out.println("Closing socket");
                 this.s.close();
             } catch (IOException e) {
-                System.out.println(new StringBuffer().append("telnet.disconnect() IOException: ").append(e).toString());
+                System.out.println("telnet.disconnect() IOException: " + e);
             }
         }
         if (this.cmdHandler != null) {

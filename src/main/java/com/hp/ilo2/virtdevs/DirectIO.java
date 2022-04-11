@@ -48,7 +48,7 @@ public class DirectIO {
 
     static {
         keydrive = 1;
-        String stringBuffer = new StringBuffer().append("cpqma-").append(Integer.toHexString(virtdevs.UID)).append(MediaAccess.dllext).toString();
+        String stringBuffer = "cpqma-" + Integer.toHexString(virtdevs.UID) + MediaAccess.dllext;
         String property = System.getProperty("file.separator");
         String property2 = System.getProperty("java.io.tmpdir");
         String lowerCase = System.getProperty("os.name").toLowerCase();
@@ -56,15 +56,15 @@ public class DirectIO {
             property2 = lowerCase.startsWith("windows") ? "C:\\TEMP" : "/tmp";
         }
         if (!property2.endsWith(property)) {
-            property2 = new StringBuffer().append(property2).append(property).toString();
+            property2 = property2 + property;
         }
-        String stringBuffer2 = new StringBuffer().append(property2).append(stringBuffer).toString();
+        String stringBuffer2 = property2 + stringBuffer;
         String property3 = virtdevs.prop.getProperty("com.hp.ilo2.virtdevs.dll");
-        keydrive = Boolean.valueOf(virtdevs.prop.getProperty("com.hp.ilo2.virtdevs.keydrive", "true")).booleanValue() ? 1 : 0;
+        keydrive = Boolean.valueOf(virtdevs.prop.getProperty("com.hp.ilo2.virtdevs.keydrive", "true")) ? 1 : 0;
         if (property3 != null) {
             stringBuffer2 = property3;
         }
-        System.out.println(new StringBuffer().append("Loading ").append(stringBuffer2).toString());
+        System.out.println("Loading " + stringBuffer2);
         System.load(stringBuffer2);
     }
 }

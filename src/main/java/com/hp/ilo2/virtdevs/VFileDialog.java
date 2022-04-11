@@ -26,7 +26,7 @@ public class VFileDialog extends Frame implements WindowListener {
     public String getString() {
         String str = null;
         if (!(this.fd.getDirectory() == null || this.fd.getFile() == null)) {
-            str = new StringBuffer().append(this.fd.getDirectory()).append(this.fd.getFile()).toString();
+            str = this.fd.getDirectory() + this.fd.getFile();
         }
         return str;
     }

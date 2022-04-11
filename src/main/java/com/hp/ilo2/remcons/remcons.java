@@ -4,6 +4,7 @@ import com.hp.ilo2.intgapp.intgapp;
 import com.hp.ilo2.intgapp.locinfo;
 import com.hp.ilo2.virtdevs.VErrorDialog;
 import com.hp.ilo2.virtdevs.virtdevs;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -21,101 +22,91 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-
 public class remcons extends JPanel implements TimerListener, Runnable {
-    private static final int SESSION_TIMEOUT_DEFAULT = 900;
-    private static final int KEEP_ALIVE_INTERVAL = 30;
-    private static final int INFINITE_TIMEOUT = 2147483640;
-    private static final int REMCONS_MAX_FN_KEYS = 12;
-    private static final int LICENSE_RC = 1;
-    public cim session;
-    public cmd telnetObj;
+
     Image[] img;
-    static final int ImageDone = 39;
-    public JPanel pwrStatusPanel;
-    public JPanel ledStatusPanel;
-    private Image pwrEncImgLock;
-    private Image pwrEncImgUnlock;
-    private Image pwrEncImg;
-    private JPanel pwrEncCanvas;
-    private Image vmActImgOn;
-    private Image vmActImgOff;
-    private Image vmActImg;
-    private JPanel vmActCanvas;
-    private Image pwrHealthImgGreen;
-    private Image pwrHealthImgYellow;
-    private Image pwrHealthImgRed;
-    private Image pwrHealthImgOff;
-    private Image pwrHealthImg;
-    private JPanel pwrHealthCanvas;
-    private Image pwrPowerImgOn;
-    private Image pwrPowerImgOff;
-    private Image pwrPowerImg;
-    private JPanel pwrPowerCanvas;
-    private JLabel pwrEncLabel;
-    private String login;
-    private Timer timer;
-    private Timer keyBoardTimer;
-    public int timeout_countdown;
-    private String rcErrMessage;
-    private JFrame parent_frame;
-    public static final int RETRY_CONNECTION_MAX = 3;
     Thread locale_setter;
-    public intgapp ParentApp;
-    private static boolean dialogIsOpen = false;
-    private static final char[] base64 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '>', 0, 0, 0, '?', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, '\b', '\t', '\n', 11, '\f', '\r', 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0, 0, 0, 0, 0, 0, 26, 27, 28, 29, 30, 31, ' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', 0, 0, 0, 0, 0};
-    public static Properties prop = new Properties();
-    private int session_timeout = SESSION_TIMEOUT_DEFAULT;
-    public KeyboardHook kHook = null;
-    public boolean kbHookInstalled = false;
-    public boolean kbHookAvailable = false;
-    public int keyData = 0;
-    public int prevKeyData = 0;
-    public boolean kbHookDataRcvd = false;
-    private String term_svcs_label = "Terminal Svcs";
-    private int keyTimerTick = 20;
-    private int port_num = 23;
-    private boolean translate = false;
-    private boolean debug_msg = false;
-    private String session_ip = null;
-    private int num_cursors = 0;
-    private int mouse_mode = 0;
-    public int[] rndm_nums = new int[12];
-    private int terminalServicesPort = 3389;
-    private boolean launchTerminalServices = false;
-    private int ts_param = 0;
-    public boolean session_encryption_enabled = false;
-    public byte[] session_encrypt_key = new byte[16];
-    public byte[] session_decrypt_key = new byte[16];
-    public int session_key_index = 0;
-    private LocaleTranslator lt = new LocaleTranslator();
-    public int initialized = 0;
-    public boolean retry_connection_flag = false;
-    public int retry_connection_count = 0;
-    public boolean licensed = false;
-    public boolean halfHeightCapable = false;
-    boolean fdConnState = false;
+    boolean cdCachedConnState = false;
     boolean cdConnState = false;
     boolean fdCachedConnState = false;
-    boolean cdCachedConnState = false;
+    boolean fdConnState = false;
+    private Image pwrEncImg;
+    private Image pwrEncImgLock;
+    private Image pwrEncImgUnlock;
+    private Image pwrHealthImg;
+    private Image pwrHealthImgGreen;
+    private Image pwrHealthImgOff;
+    private Image pwrHealthImgRed;
+    private Image pwrHealthImgYellow;
+    private Image pwrPowerImg;
+    private Image pwrPowerImgOff;
+    private Image pwrPowerImgOn;
+    private Image vmActImg;
+    private Image vmActImgOff;
+    private Image vmActImgOn;
+    private JFrame parent_frame;
+    private JLabel pwrEncLabel;
+    private JPanel pwrEncCanvas;
+    private JPanel pwrHealthCanvas;
+    private JPanel pwrPowerCanvas;
+    private JPanel vmActCanvas;
+    private final LocaleTranslator lt = new LocaleTranslator();
+    private String login;
+    private String rcErrMessage;
+    private String session_ip = null;
+    private String term_svcs_label = "Terminal Svcs";
+    private Timer keyBoardTimer;
+    private Timer timer;
+    private boolean debug_msg = false;
+    private boolean launchTerminalServices = false;
+    private final boolean translate = false;
+    private final int keyTimerTick = 20;
     private int localKbdLayoutId = 0;
+    private int mouse_mode = 0;
+    private int num_cursors = 0;
+    private int port_num = 23;
+    private int session_timeout = SESSION_TIMEOUT_DEFAULT;
+    private int terminalServicesPort = 3389;
+    private final int ts_param = 0;
+    private static boolean dialogIsOpen = false;
+    private static final char[] base64 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '>', 0, 0, 0, '?', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, '\b', '\t', '\n', 11, '\f', '\r', 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0, 0, 0, 0, 0, 0, 26, 27, 28, 29, 30, 31, ' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', 0, 0, 0, 0, 0};
+    private static final int INFINITE_TIMEOUT = 2147483640;
+    private static final int KEEP_ALIVE_INTERVAL = 30;
+    private static final int LICENSE_RC = 1;
+    private static final int REMCONS_MAX_FN_KEYS = 12;
+    private static final int SESSION_TIMEOUT_DEFAULT = 900;
+    public JPanel ledStatusPanel;
+    public JPanel pwrStatusPanel;
+    public KeyboardHook kHook = null;
+    public boolean halfHeightCapable = false;
+    public boolean kbHookAvailable = false;
+    public boolean kbHookDataRcvd = false;
+    public boolean kbHookInstalled = false;
+    public boolean licensed = false;
+    public boolean retry_connection_flag = false;
+    public boolean session_encryption_enabled = false;
+    public byte[] session_decrypt_key = new byte[16];
+    public byte[] session_encrypt_key = new byte[16];
+    public cim session;
+    public cmd telnetObj;
+    public int initialized = 0;
+    public int keyData = 0;
+    public int prevKeyData = 0;
+    public int retry_connection_count = 0;
+    public int session_key_index = 0;
+    public int timeout_countdown;
+    public int[] rndm_nums = new int[12];
+    public intgapp ParentApp;
+    public static Properties prop = new Properties();
+    public static final int RETRY_CONNECTION_MAX = 3;
+    static final int ImageDone = 39;
 
     static {
         try {
-            prop.load(new FileInputStream(new StringBuffer().append(System.getProperty("user.home")).append(System.getProperty("file.separator")).append(".java").append(System.getProperty("file.separator")).append("hp.properties").toString()));
+            prop.load(new FileInputStream(System.getProperty("user.home") + System.getProperty("file.separator") + ".java" + System.getProperty("file.separator") + "hp.properties"));
         } catch (Exception e) {
-            System.out.println(new StringBuffer().append("Exception: ").append(e).toString());
+            System.out.println("Exception: " + e);
         }
-    }
-
-    public String getLocalString(int i) {
-        String str = "";
-        try {
-            str = this.ParentApp.locinfoObj.getLocString(i);
-        } catch (Exception e) {
-            System.out.println(new StringBuffer().append("remcons:getLocalString").append(e.getMessage()).toString());
-        }
-        return str;
     }
 
     public remcons(intgapp intgappVar) {
@@ -123,7 +114,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
     }
 
     public Image getImg(String str) {
-        return this.ParentApp.getImage(getClass().getClassLoader().getResource(new StringBuffer().append("com/hp/ilo2/remcons/images/").append(str).toString()));
+        return this.ParentApp.getImage(getClass().getClassLoader().getResource("com/hp/ilo2/remcons/images/" + str));
     }
 
     void waitImage(Image image, ImageObserver imageObserver) {
@@ -174,7 +165,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         String str = "unknown";
         if (lowerCase.startsWith("windows") || lowerCase.startsWith("linux")) {
             if (lowerCase.startsWith("windows")) {
-                if (property.indexOf("64") != -1) {
+                if (property.contains("64")) {
                     System.out.println("kbhookdll Detected win 64bit jvm");
                     str = "HpqKbHook-x86-win64";
                 } else {
@@ -182,7 +173,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
                     str = "HpqKbHook-x86-win32";
                 }
             } else if (lowerCase.startsWith("linux")) {
-                if (property.indexOf("64") != -1) {
+                if (property.contains("64")) {
                     System.out.println("kbhookdll Detected 64bit linux jvm");
                     str = "HpqKbHook-x86-linux-64";
                 } else {
@@ -245,7 +236,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         this.vmActImg = this.vmActImgOff;
         this.pwrPowerImg = this.pwrPowerImgOff;
         JPanel jPanel = this.pwrStatusPanel;
-        this.pwrEncCanvas = new JPanel(){
+        this.pwrEncCanvas = new JPanel() {
 
             public void paintComponent(Graphics graphics) {
                 super.paintComponent(graphics);
@@ -258,7 +249,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
             }
         };
         jPanel.add(this.pwrEncCanvas, "West");
-        setToolTipRecursively(this.pwrEncCanvas, getLocalString(locinfo.TOOLSTR_4003));
+        setToolTipRecursively(this.pwrEncCanvas, locinfo.TOOLSTR_4003);
         this.pwrEncCanvas.setPreferredSize(new Dimension(20, 20));
         this.pwrEncCanvas.setVisible(true);
         JPanel jPanel3 = this.pwrStatusPanel;
@@ -267,7 +258,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         jPanel3.add(jLabel);
         this.pwrEncLabel.setText("         ");
         JPanel jPanel4 = this.ledStatusPanel;
-        this.pwrHealthCanvas = new JPanel(){
+        this.pwrHealthCanvas = new JPanel() {
 
             public void paintComponent(Graphics graphics) {
                 super.paintComponent(graphics);
@@ -280,11 +271,11 @@ public class remcons extends JPanel implements TimerListener, Runnable {
             }
         };
         this.ledStatusPanel.add(this.pwrHealthCanvas, "West");
-        setToolTipRecursively(this.pwrHealthCanvas, getLocalString(locinfo.TOOLSTR_4002));
+        setToolTipRecursively(this.pwrHealthCanvas, locinfo.TOOLSTR_4002);
         this.pwrHealthCanvas.setPreferredSize(new Dimension(18, 25));
         this.pwrHealthCanvas.setVisible(true);
         JPanel jPanel6 = this.ledStatusPanel;
-        this.vmActCanvas = new JPanel(){
+        this.vmActCanvas = new JPanel() {
 
             public void paintComponent(Graphics graphics) {
                 super.paintComponent(graphics);
@@ -297,11 +288,11 @@ public class remcons extends JPanel implements TimerListener, Runnable {
             }
         };
         jPanel6.add(this.vmActCanvas, "Center");
-        setToolTipRecursively(this.vmActCanvas, getLocalString(locinfo.TOOLSTR_4004));
+        setToolTipRecursively(this.vmActCanvas, locinfo.TOOLSTR_4004);
         this.vmActCanvas.setPreferredSize(new Dimension(18, 25));
         this.vmActCanvas.setVisible(true);
         JPanel jPanel8 = this.ledStatusPanel;
-        this.pwrPowerCanvas = new JPanel(){
+        this.pwrPowerCanvas = new JPanel() {
 
             public void paintComponent(Graphics graphics) {
                 super.paintComponent(graphics);
@@ -314,12 +305,12 @@ public class remcons extends JPanel implements TimerListener, Runnable {
             }
         };
         jPanel8.add(this.pwrPowerCanvas, "East");
-        setToolTipRecursively(this.pwrPowerCanvas, getLocalString(locinfo.TOOLSTR_4001));
+        setToolTipRecursively(this.pwrPowerCanvas, locinfo.TOOLSTR_4001);
         this.pwrPowerCanvas.setPreferredSize(new Dimension(18, 25));
         this.pwrPowerCanvas.setVisible(true);
         this.pwrStatusPanel.add(this.ledStatusPanel, "East");
         this.session.enable_keyboard();
-        if (true == this.kbHookAvailable) {
+        if (this.kbHookAvailable) {
             this.keyBoardTimer = new Timer(this.keyTimerTick, false, this.session);
             this.keyBoardTimer.setListener(new keyBoardTimerListener(this), null);
             this.keyBoardTimer.start();
@@ -334,7 +325,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         if (this.session_timeout == INFINITE_TIMEOUT) {
             System.out.println("Remote Console inactivity timeout = infinite.");
         } else {
-            System.out.println(new StringBuffer().append("Remote Console inactivity timeout = ").append(this.session_timeout / 60).append(" minutes.").toString());
+            System.out.println("Remote Console inactivity timeout = " + this.session_timeout / 60 + " minutes.");
         }
     }
 
@@ -352,20 +343,20 @@ public class remcons extends JPanel implements TimerListener, Runnable {
                 file.mkdir();
             }
             if (!property.endsWith(property2)) {
-                property = new StringBuffer().append(property).append(property2).toString();
+                property = property + property2;
             }
-            StringBuffer append = new StringBuffer().append(property).append("HpqKbHook-");
             virtdevs virtdevsVar = this.ParentApp.virtdevsObj;
-            String stringBuffer = append.append(Integer.toHexString(virtdevs.UID)).append(".dll").toString();
-            System.out.println(new StringBuffer().append("checking for kbddll").append(stringBuffer).toString());
+            String stringBuffer = property + "HpqKbHook-" +
+                    Integer.toHexString(virtdevs.UID) + ".dll";
+            System.out.println("checking for kbddll" + stringBuffer);
             if (new File(stringBuffer).exists()) {
-                System.out.println(new StringBuffer().append(str).append(" already present ..").toString());
+                System.out.println(str + " already present ..");
                 return true;
             }
-            System.out.println(new StringBuffer().append("Extracting ").append(str).append("...").toString());
+            System.out.println("Extracting " + str + "...");
             byte[] bArr = new byte[4096];
             try {
-                InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(new StringBuffer().append("com/hp/ilo2/remcons/").append(str).toString());
+                InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("com/hp/ilo2/remcons/" + str);
                 FileOutputStream fileOutputStream = new FileOutputStream(stringBuffer);
                 while (true) {
                     int read = resourceAsStream.read(bArr, 0, 4096);
@@ -374,12 +365,12 @@ public class remcons extends JPanel implements TimerListener, Runnable {
                     }
                     fileOutputStream.write(bArr, 0, read);
                 }
-                System.out.println(new StringBuffer().append("Writing dll to ").append(stringBuffer).append("complete").toString());
+                System.out.println("Writing dll to " + stringBuffer + "complete");
                 resourceAsStream.close();
                 fileOutputStream.close();
                 z = true;
             } catch (IOException e) {
-                System.out.println(new StringBuffer().append("dllExtract: ").append(e).toString());
+                System.out.println("dllExtract: " + e);
                 z = false;
             }
         } else {
@@ -405,7 +396,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         }
     }
 
-    @Override // com.hp.ilo2.remcons.TimerListener
+    @Override
     public void timeout(Object obj) {
         if (this.session.UI_dirty) {
             this.session.UI_dirty = false;
@@ -444,7 +435,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
     }
 
     public void setPwrStatusEncLabel(String str) {
-        this.pwrEncLabel.setText(new StringBuffer().append(str).append("       ").toString());
+        this.pwrEncLabel.setText(str + "       ");
     }
 
     public void setPwrStatusHealth(int i) {
@@ -495,7 +486,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
     }
 
     public int seize_dialog(String str, String str2, int i) {
-        System.out.println(new StringBuffer().append("seize dialog invoked").append(i).toString());
+        System.out.println("seize dialog invoked" + i);
         return new VSeizeWaitDialog(this, str, str2, i).getUserInput();
     }
 
@@ -510,19 +501,19 @@ public class remcons extends JPanel implements TimerListener, Runnable {
 
     public void shared(String str, String str2) {
         System.out.println("shared notification invoked");
-        new VErrorDialog(this.ParentApp.dispFrame, getLocalString(locinfo.DIALOGSTR_2026), new StringBuffer().append(getLocalString(locinfo.DIALOGSTR_2027)).append(" ").append(str2).append("@").append(str).append(getLocalString(locinfo.DIALOGSTR_2028)).toString(), false);
+        new VErrorDialog(this.ParentApp.dispFrame, locinfo.DIALOGSTR_2026, locinfo.DIALOGSTR_2027 + " " + str2 + "@" + str + locinfo.DIALOGSTR_2028, false);
     }
 
     public void unAuthorized(String str) {
-        new VErrorDialog(this.ParentApp.dispFrame, getLocalString(locinfo.DIALOGSTR_2026), new StringBuffer().append(getLocalString(locinfo.DIALOGSTR_2029)).append(str).append(getLocalString(locinfo.DIALOGSTR_202a)).toString(), false);
-        if (-1 != str.indexOf("for remote console")) {
+        new VErrorDialog(this.ParentApp.dispFrame, locinfo.DIALOGSTR_2026, locinfo.DIALOGSTR_2029 + str + locinfo.DIALOGSTR_202a, false);
+        if (str.contains("for remote console")) {
             this.session.unAuthAccess();
         }
     }
 
     public void firmwareUpgrade() {
         System.out.println("Firmware upgrade notification invoked");
-        VErrorDialog vErrorDialog = new VErrorDialog(this.ParentApp.dispFrame, getLocalString(locinfo.DIALOGSTR_2026), getLocalString(locinfo.DIALOGSTR_202b), false);
+        VErrorDialog vErrorDialog = new VErrorDialog(this.ParentApp.dispFrame, locinfo.DIALOGSTR_2026, locinfo.DIALOGSTR_202b, false);
         this.ParentApp.moveUItoInit(false);
         this.ParentApp.virtdevsObj.stop();
         this.session.fwUpgrade();
@@ -539,16 +530,17 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         if (b2 == 1) {
             if (b4 == 1 && !this.ParentApp.fdSelected) {
                 this.ParentApp.fdSelected = true;
-                this.ParentApp.lockFdMenu(false, new StringBuffer().append(getLocalString(locinfo.MENUSTR_1023)).append(getLocalString(locinfo.MENUSTR_100A)).toString());
+                this.ParentApp.lockFdMenu(false, locinfo.MENUSTR_1023 + locinfo.MENUSTR_100A);
             } else if (b4 == 0 && this.ParentApp.fdSelected) {
                 this.ParentApp.fdSelected = false;
                 this.ParentApp.lockFdMenu(true, "");
             }
         } else if (b2 != 2) {
+            /* no-op */
         } else {
             if (b4 == 1 && !this.ParentApp.cdSelected) {
                 this.ParentApp.cdSelected = true;
-                this.ParentApp.lockCdMenu(false, new StringBuffer().append(getLocalString(locinfo.MENUSTR_1023)).append(getLocalString(locinfo.MENUSTR_100B)).toString());
+                this.ParentApp.lockCdMenu(false, locinfo.MENUSTR_1023 + locinfo.MENUSTR_100B);
             } else if (b4 == 0 && this.ParentApp.cdSelected) {
                 this.ParentApp.cdSelected = false;
                 this.ParentApp.lockCdMenu(true, "");
@@ -582,7 +574,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
             return base64_decode(str);
         }
         try {
-            return new StringBuffer().append(new StringBuffer().append(new StringBuffer().append(new StringBuffer().append("\u001b[!").append(str.substring(17, 73)).toString()).append('\r').toString()).append(str.substring(74, 106)).toString()).append('\r').toString();
+            return "\u001b[!" + str.substring(17, 73) + '\r' + str.substring(74, 106) + '\r';
         } catch (StringIndexOutOfBoundsException e) {
             return null;
         }
@@ -590,7 +582,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
 
     private String base64_decode(String str) {
         int i = 0;
-        String str2 = "";
+        StringBuilder str2 = new StringBuilder();
         for (int i2 = 0; i2 + 3 < str.length() && i == 0; i2 += 4) {
             char c = base64[str.charAt(i2) & 127];
             char c2 = base64[str.charAt(i2 + 1) & 127];
@@ -608,22 +600,22 @@ public class remcons extends JPanel implements TimerListener, Runnable {
             if (c7 == ':') {
                 c7 = '\r';
             }
-            str2 = new StringBuffer().append(str2).append(c5).toString();
+            str2.append(c5);
             if (str.charAt(i2 + 2) == '=') {
                 i++;
             } else {
-                str2 = new StringBuffer().append(str2).append(c6).toString();
+                str2.append(c6);
             }
             if (str.charAt(i2 + 3) == '=') {
                 i++;
             } else {
-                str2 = new StringBuffer().append(str2).append(c7).toString();
+                str2.append(c7);
             }
         }
         if (str2.length() != 0) {
-            str2 = new StringBuffer().append(str2).append('\r').toString();
+            str2.append('\r');
         }
-        return str2;
+        return str2.toString();
     }
 
     public void paint(Graphics graphics) {
@@ -633,24 +625,24 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         return this.timeout_countdown;
     }
 
-    @Override // java.lang.Runnable
+    @Override
     public void run() {
         if (System.getProperty("os.name").toLowerCase().startsWith("windows") && !this.lt.windows) {
             Locale.setDefault(Locale.US);
         }
         while (true) {
-            if (true == this.retry_connection_flag && 3 >= this.retry_connection_count) {
-                System.out.println(new StringBuffer().append("Retrying connection").append(this.retry_connection_count).toString());
+            if (this.retry_connection_flag && 3 >= this.retry_connection_count) {
+                System.out.println("Retrying connection" + this.retry_connection_count);
                 this.retry_connection_flag = false;
                 this.retry_connection_count++;
-                if (false == this.fdCachedConnState) {
+                if (!this.fdCachedConnState) {
                     this.fdCachedConnState = this.fdConnState;
                 }
-                if (false == this.cdCachedConnState) {
+                if (!this.cdCachedConnState) {
                     this.cdCachedConnState = this.cdConnState;
                 }
-                System.out.println(new StringBuffer().append("fd conn:").append(this.fdConnState).append(" cd conn:").append(this.cdConnState).toString());
-                System.out.println(new StringBuffer().append("fdcache:").append(this.fdCachedConnState).append(" cdcache:").append(this.cdCachedConnState).toString());
+                System.out.println("fd conn:" + this.fdConnState + " cd conn:" + this.cdConnState);
+                System.out.println("fdcache:" + this.fdCachedConnState + " cdcache:" + this.cdCachedConnState);
                 stop_session();
                 try {
                     sleepAtLeast(5000L);
@@ -670,12 +662,12 @@ public class remcons extends JPanel implements TimerListener, Runnable {
                 } catch (InterruptedException e2) {
                     System.out.println("Thread interrupted..");
                 }
-                if (null == this.session.receiver || false != this.retry_connection_flag) {
+                if (null == this.session.receiver || this.retry_connection_flag) {
                     this.retry_connection_flag = true;
                 } else {
                     this.retry_connection_count = 0;
                 }
-            } else if (true == this.retry_connection_flag) {
+            } else if (this.retry_connection_flag) {
                 System.out.println("Retry connection  - video maximum attempts exhausted");
                 stop_session();
                 this.retry_connection_flag = false;
@@ -689,43 +681,14 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         }
     }
 
-    
-    
-    
-    
-    
-    
-    /*
-        Code decompiled incorrectly, please refer to instructions dump.
-        To view partially-correct code enable 'Show inconsistent code' option in preferences
-    */
-    public void sleepAtLeast(long r8) throws java.lang.InterruptedException {
-        /*
-            r7 = this;
-            long r0 = java.lang.System.currentTimeMillis()
-            r10 = r0
-            r0 = r8
-            r12 = r0
-            goto L_0x001c
-        L_0x000a:
-            r0 = r12
-            java.lang.Thread.sleep(r0)
-            long r0 = java.lang.System.currentTimeMillis()
-            r14 = r0
-            r0 = r8
-            r1 = r14
-            r2 = r10
-            long r1 = r1 - r2
-            long r0 = r0 - r1
-            r12 = r0
-        L_0x001c:
-            r0 = r12
-            r1 = 0
-            int r0 = (r0 > r1 ? 1 : (r0 == r1 ? 0 : -1))
-            if (r0 > 0) goto L_0x000a
-            return
-        */
-        throw new UnsupportedOperationException("Method not decompiled: com.hp.ilo2.remcons.remcons.sleepAtLeast(long):void");
+    public void sleepAtLeast(long l) throws java.lang.InterruptedException {
+        long l2 = System.currentTimeMillis();
+        long l3 = l;
+        while (l3 > 0L) {
+            Thread.sleep(l3);
+            long l4 = System.currentTimeMillis();
+            l3 = l - (l4 - l2);
+        }
     }
 
     public void setDialogIsOpen(boolean z) {
@@ -733,14 +696,11 @@ public class remcons extends JPanel implements TimerListener, Runnable {
     }
 
     public void SetLicensed(int i) {
-        this.licensed = false;
-        if ((i & 1) != 0) {
-            this.licensed = true;
-        }
-        System.out.println(new StringBuffer().append("SetLicensed: ").append(this.licensed).toString());
+        this.licensed = (i & 1) != 0;
+        System.out.println("SetLicensed: " + this.licensed);
     }
 
-    
+
     public void SetFlags(int i) {
         if ((i & 8) == 0) {
             this.halfHeightCapable = false;
@@ -752,15 +712,15 @@ public class remcons extends JPanel implements TimerListener, Runnable {
     }
 
     public void UnlicensedShutdown() {
-        String stringBuffer = new StringBuffer().append("<html>").append(getLocalString(locinfo.DIALOGSTR_2015)).append(" ").append(getLocalString(locinfo.DIALOGSTR_2017)).append(" ").append(getLocalString(locinfo.DIALOGSTR_202d)).append("<br><br>").append(getLocalString(locinfo.DIALOGSTR_202e)).append("</html>").toString();
+        String stringBuffer = "<html>" + locinfo.DIALOGSTR_2015 + " " + locinfo.DIALOGSTR_2017 + " " + locinfo.DIALOGSTR_202d + "<br><br>" + locinfo.DIALOGSTR_202e + "</html>";
         System.out.println("Unlicensed notification invoked");
-        new VErrorDialog(this.ParentApp.dispFrame, getLocalString(locinfo.DIALOGSTR_202c), stringBuffer, true).getBoolean();
+        new VErrorDialog(this.ParentApp.dispFrame, locinfo.DIALOGSTR_202c, stringBuffer, true);
         this.ParentApp.moveUItoInit(false);
         this.ParentApp.stop();
     }
 
     public void resetShutdown() {
-        new VErrorDialog(this.ParentApp.dispFrame, getLocalString(locinfo.MENUSTR_1007), getLocalString(locinfo.DIALOGSTR_2061), true).getBoolean();
+        new VErrorDialog(this.ParentApp.dispFrame, locinfo.MENUSTR_1007, locinfo.DIALOGSTR_2061, true);
         this.ParentApp.moveUItoInit(false);
         this.ParentApp.stop();
     }
@@ -776,9 +736,9 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         } else if (i == 1) {
             str = "vnc";
         } else {
-            str = new StringBuffer().append("type").append(i).toString();
+            str = "type" + i;
         }
-        this.term_svcs_label = prop.getProperty(new StringBuffer().append(str).append(".label").toString(), "Terminal Svcs");
+        this.term_svcs_label = prop.getProperty(str + ".label", "Terminal Svcs");
     }
 
     public void remconsInstallKeyboardHook() {
@@ -816,7 +776,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
                 this.kHook.clearKeymap();
                 return;
             }
-            System.out.println(new StringBuffer().append("remconsUnInstallKeyboardHook: uninstall failed:").append(UnInstallKeyboardHook).toString());
+            System.out.println("remconsUnInstallKeyboardHook: uninstall failed:" + UnInstallKeyboardHook);
         }
     }
 
@@ -826,20 +786,19 @@ public class remcons extends JPanel implements TimerListener, Runnable {
             this.localKbdLayoutId = i;
             return;
         }
-        System.out.println(new StringBuffer().append("setKbdLayoutHandler: set Layout - ").append(i).toString());
+        System.out.println("setKbdLayoutHandler: set Layout - " + i);
         this.kHook.setLocalKbdLayout(i);
     }
 
-    
-    
-    public class keyBoardTimerListener implements TimerListener {
+
+    public static class keyBoardTimerListener implements TimerListener {
         private final remcons this$0;
 
         keyBoardTimerListener(remcons remconsVar) {
             this.this$0 = remconsVar;
         }
 
-        @Override // com.hp.ilo2.remcons.TimerListener
+        @Override
         public synchronized void timeout(Object obj) {
             boolean z;
             boolean z2 = false;
@@ -864,7 +823,7 @@ public class remcons extends JPanel implements TimerListener, Runnable {
                         }
                         byte[] HandleHookKey = this.this$0.kHook.HandleHookKey(i4, i3, z2, z);
                         if (this.this$0.kHook.kcmdValid) {
-                            if (false == this.this$0.kbHookDataRcvd) {
+                            if (!this.this$0.kbHookDataRcvd) {
                                 this.this$0.kbHookDataRcvd = true;
                             }
                             this.this$0.session.transmitb(HandleHookKey, HandleHookKey.length);
