@@ -8,59 +8,60 @@ import java.awt.event.MouseWheelListener;
 
 
 public class MouseSync implements MouseListener, MouseMotionListener, MouseWheelListener, TimerListener {
+
+    private MouseSyncListener listener;
+    private Timer timer;
+    private boolean debug_msg = false;
+    private boolean dragging;
+    private boolean sync_successful;
+    private final Object mutex;
+    private int client_dx;
+    private int client_dy;
+    private int client_x;
+    private int client_y;
+    private int pressed_button;
+    private int send_dx_count;
+    private int send_dx_index;
+    private int send_dx_success;
+    private int send_dy_count;
+    private int send_dy_index;
+    private int send_dy_success;
+    private int server_h;
+    private int server_w;
+    private int server_x;
+    private int server_y;
+    private int state = 0;
+    private int[] recv_dx;
+    private int[] recv_dy;
+    private int[] send_dx;
+    private int[] send_dy;
+    private static final int CMD_ALIGN = 14;
+    private static final int CMD_CLICK = 7;
+    private static final int CMD_DRAG = 12;
+    private static final int CMD_ENTER = 8;
+    private static final int CMD_EXIT = 9;
+    private static final int CMD_MOVE = 13;
+    private static final int CMD_PRESS = 10;
+    private static final int CMD_RELEASE = 11;
+    private static final int CMD_SERVER_DISABLE = 5;
+    private static final int CMD_SERVER_MOVE = 3;
+    private static final int CMD_SERVER_SCREEN = 4;
     private static final int CMD_START = 0;
     private static final int CMD_STOP = 1;
     private static final int CMD_SYNC = 2;
-    private static final int CMD_SERVER_MOVE = 3;
-    private static final int CMD_SERVER_SCREEN = 4;
-    private static final int CMD_SERVER_DISABLE = 5;
     private static final int CMD_TIMEOUT = 6;
-    private static final int CMD_CLICK = 7;
-    private static final int CMD_ENTER = 8;
-    private static final int CMD_EXIT = 9;
-    private static final int CMD_PRESS = 10;
-    private static final int CMD_RELEASE = 11;
-    private static final int CMD_DRAG = 12;
-    private static final int CMD_MOVE = 13;
-    private static final int CMD_ALIGN = 14;
+    private static final int STATE_DISABLE = 3;
+    private static final int STATE_ENABLE = 2;
     private static final int STATE_INIT = 0;
     private static final int STATE_SYNC = 1;
-    private static final int STATE_ENABLE = 2;
-    private static final int STATE_DISABLE = 3;
-    private MouseSyncListener listener;
-    private int server_w;
-    private int server_h;
-    private int server_x;
-    private int server_y;
-    private int client_x;
-    private int client_y;
-    private int client_dx;
-    private int client_dy;
-    private int[] send_dx;
-    private int[] send_dy;
-    private int[] recv_dx;
-    private int[] recv_dy;
-    private int send_dx_index;
-    private int send_dy_index;
-    private static final int SYNC_SUCCESS_COUNT = 2;
     private static final int SYNC_FAIL_COUNT = 4;
-    private int send_dx_count;
-    private int send_dy_count;
-    private int send_dx_success;
-    private int send_dy_success;
-    private boolean sync_successful;
+    private static final int SYNC_SUCCESS_COUNT = 2;
     private static final int TIMEOUT_DELAY = 5;
     private static final int TIMEOUT_MOVE = 200;
     private static final int TIMEOUT_SYNC = 2000;
-    private Timer timer;
-    public static final int MOUSE_BUTTON_LEFT = 4;
     public static final int MOUSE_BUTTON_CENTER = 2;
+    public static final int MOUSE_BUTTON_LEFT = 4;
     public static final int MOUSE_BUTTON_RIGHT = 1;
-    private int pressed_button;
-    private boolean dragging;
-    private final Object mutex;
-    private boolean debug_msg = false;
-    private int state = 0;
 
     public MouseSync(Object obj) {
         this.mutex = obj;
@@ -103,7 +104,7 @@ public class MouseSync implements MouseListener, MouseMotionListener, MouseWheel
         state_machine(5, null, 0, 0);
     }
 
-    @Override // com.hp.ilo2.remcons.TimerListener
+    @Override
     public void timeout(Object obj) {
         state_machine(6, null, 0, 0);
     }
@@ -140,7 +141,7 @@ public class MouseSync implements MouseListener, MouseMotionListener, MouseWheel
     private void move_delay() {
         try {
             Thread.sleep(5L);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignored) {
         }
     }
 

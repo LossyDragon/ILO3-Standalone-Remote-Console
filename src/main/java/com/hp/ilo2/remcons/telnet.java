@@ -5,40 +5,43 @@ import com.hp.ilo2.virtdevs.MediaAccess;
 import com.hp.ilo2.virtdevs.SCSI;
 import com.hp.ilo2.virtdevs.VErrorDialog;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Locale;
 import java.util.Objects;
-
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 public class telnet extends JPanel implements Runnable, MouseListener, FocusListener, KeyListener {
-    
-    LocaleTranslator translator = new LocaleTranslator();
+
+    final LocaleTranslator translator = new LocaleTranslator();
     int ts_type;
     private Aes aes128decrypter;
     private Aes aes256decrypter;
-    private final Locale lo;
     private Process rdpProc = null;
     private RC4 RC4decrypter;
-    private final String keyboardLayout;
-    private final boolean crlf_enabled = false;
-    private boolean decryption_active = false;
-    private boolean enable_terminal_services = false;
     private boolean screenFocusLost = false;
     private boolean seized = false;
+    private final boolean crlf_enabled = false;
     private final boolean tbm_mode = false;
-    private int japanese_kbd;
-    private int terminalServicesPort = 3389;
     private final int total_count = 0;
     private final int[] keyMap = new int[256];
     private final int[] winkey_to_hid = {0, 0, 0, 0, 0, 0, 0, 0, 42, 43, 40, 0, 0, 40, 0, 0, 225, 224, 226, 72, 57, 0, 0, 0, 0, 0, 41, 41, 138, 139, 0, 0, 44, 75, 78, 77, 74, 80, 82, 79, 81, 0, 0, 0, 54, 45, 55, 56, 39, 30, 31, 32, 33, 34, 35, 36, 37, 38, 0, 51, 0, 46, 0, 0, 0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 47, 49, 48, 0, 0, 98, 89, 90, 91, 92, 93, 94, 95, 96, 97, 85, 87, 159, 86, 99, 84, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 0, 0, 0, 76, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 83, 71, 0, 0, 0, 0, 36, 37, 52, 54, 70, 73, 0, 0, 0, 0, 55, 47, 48, 228, 226, 230, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 51, 46, 54, 45, 55, 56, 53, 135, 48, 137, 50, 52, 135, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 47, 49, 48, 52, 0, 96, 90, 92, 94, 0, 0, 0, 0, 0, 0, 0, 139, 0, 0, 0, 0, 136, 136, 136, 53, 53, 0, 0, 0, 0, 0, 0, 0, 0, 138, 0, TELNET_IAC};
+    private int japanese_kbd;
+    private int terminalServicesPort = 3389;
     private static final int CMD_TS_AVAIL = 194;
     private static final int CMD_TS_NOT_AVAIL = 195;
     private static final int CMD_TS_STARTED = 196;
@@ -54,8 +57,8 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
     protected boolean dvc_encryption = false;
     protected boolean dvc_mode = false;
     protected boolean encryption_enabled = false;
-    protected byte[] decrypt_key = new byte[16];
-    protected dvcwin screen;
+    protected final byte[] decrypt_key = new byte[16];
+    protected final dvcwin screen;
     protected int back;
     protected int connected = 0;
     protected int escseq_val_count = 0;
@@ -64,7 +67,6 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
     protected int hi_fore;
     protected int port = 23;
     protected int[] escseq_val = new int[10];
-    public JLabel status_box = new JLabel();
     public String st_fld1 = "";
     public String st_fld2 = "";
     public String st_fld3 = "";
@@ -72,7 +74,8 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
     public boolean mirror = false;
     public boolean post_complete = false;
     public byte[] sessionKey = new byte[32];
-    public cmd cmdObj = new cmd();
+    public final JLabel status_box = new JLabel();
+    public final cmd cmdObj = new cmd();
     public final int AES_BITSIZE_128 = 0;
     public final int AES_BITSIZE_192 = 1;
     public final int AES_BITSIZE_256 = 2;
@@ -126,7 +129,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
     public void setLocale(String str) {
         this.translator.selectLocale(str);
     }
-    
+
     public telnet(remcons remconsVar) {
         this.japanese_kbd = 0;
         this.remconsObj = remconsVar;
@@ -151,10 +154,10 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         for (int i = 0; i < 256; i++) {
             this.keyMap[i] = 0;
         }
-        this.lo = Locale.getDefault();
-        this.keyboardLayout = this.lo.toString();
-        System.out.println("telent lang: Keyboard layout is " + this.keyboardLayout);
-        if (this.keyboardLayout.startsWith("ja")) {
+        Locale lo = Locale.getDefault();
+        String keyboardLayout = lo.toString();
+        System.out.println("telent lang: Keyboard layout is " + keyboardLayout);
+        if (keyboardLayout.startsWith("ja")) {
             System.out.println("JAPANESE LANGUAGE \n");
             this.japanese_kbd = 1;
             return;
@@ -307,85 +310,93 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         this.aes256decrypter = new Aes(0, bArr);
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public synchronized void connect(String str, String str2, int i, int i2, int i3, remcons remconsVar) {
-        this.enable_terminal_services = (i2 & 1) == 1;
-        this.ts_type = i2 >> 8;
-        if (i3 != 0) {
-            this.terminalServicesPort = i3;
+    public synchronized void connect(String var1, String var2, int var3, int var4, int var5, remcons var6) {
+        boolean enable_terminal_services = (var4 & 1) == 1;
+        this.ts_type = var4 >> 8;
+        if (var5 != 0) {
+            this.terminalServicesPort = var5;
         }
+
         if (this.connected == 0) {
             this.screen.start_updates();
             this.connected = 1;
-            this.host = str;
-            this.login = str2;
-            this.port = i;
-            this.remconsObj = remconsVar;
-            requestFocus();
-            this.sessionKey = remconsVar.ParentApp.getParameter("RCINFO1").getBytes();
-            String str3 = remconsVar.ParentApp.rc_port;
-            if (str3 != null) {
+            this.host = var1;
+            this.login = var2;
+            this.port = var3;
+            this.remconsObj = var6;
+            this.requestFocus();
+            this.sessionKey = var6.ParentApp.getParameter("RCINFO1").getBytes();
+            String var7 = var6.ParentApp.rc_port;
+            if (var7 != null) {
                 try {
-                    this.port = Integer.parseInt(str3);
+                    this.port = Integer.parseInt(var7);
                     System.out.println("RC port number " + this.port);
-                } catch (NumberFormatException e) {
+                } catch (NumberFormatException var16) {
                     System.out.println("Failed to read rcport from parameters");
                     this.port = 23;
                 }
             }
+
             try {
-                set_status(1, locinfo.STATUSSTR_3008);
+                this.set_status(1, locinfo.STATUSSTR_3008);
                 System.out.println("updated: connecting to " + this.host + ":" + this.port);
+
                 try {
                     Thread.currentThread();
                     Thread.sleep(1000L);
-                } catch (InterruptedException e2) {
+                } catch (InterruptedException var12) {
                     System.out.println("connect Thread interrupted..");
                 }
+
                 this.s = new Socket(this.host, this.port);
+
                 try {
                     this.s.setSoLinger(true, 0);
                     System.out.println("set TcpNoDelay");
                     this.s.setTcpNoDelay(true);
-                } catch (SocketException e3) {
-                    System.out.println("telnet.connect() linger SocketException: " + e3);
+                } catch (SocketException var11) {
+                    System.out.println("telnet.connect() linger SocketException: " + var11);
                 }
+
                 this.in = new DataInputStream(this.s.getInputStream());
                 this.out = new DataOutputStream(this.s.getOutputStream());
-                if (this.in.readByte() == 80) {
-                    set_status(1, locinfo.STATUSSTR_3009);
+                byte var8 = this.in.readByte();
+                if (var8 == 80) {
+                    this.set_status(1, locinfo.STATUSSTR_3009);
+                    boolean var9 = false;
                     System.out.println("Received hello byte. Requesting remote connection...");
-                    if (requestRemoteConnection(/* Magic Number */ 8193)) {
+                    var9 = this.requestRemoteConnection(8193); // oooooooooookay...
+                    if (var9) {
                         this.receiver = new Thread(this);
                         this.receiver.setName("telnet_rcvr");
                         this.receiver.start();
                         this.cmdObj.connectCmd(this.remconsObj, this.host, this.port);
                     } else {
-                        remconsVar.ParentApp.stop();
+                        var6.ParentApp.stop();
                     }
                 } else {
-                    set_status(1, locinfo.STATUSSTR_300a);
+                    this.set_status(1, locinfo.STATUSSTR_300a);
                     System.out.println("Socket connection failure... ");
                 }
-            } catch (SocketException e4) {
-                System.out.println("telnet.connect() SocketException: " + e4);
-                set_status(1, e4.toString());
+            } catch (SocketException var13) {
+                System.out.println("telnet.connect() SocketException: " + var13);
+                this.set_status(1, var13.toString());
                 this.s = null;
                 this.in = null;
                 this.out = null;
                 this.receiver = null;
                 this.connected = 0;
-            } catch (UnknownHostException e5) {
-                System.out.println("telnet.connect() UnknownHostException: " + e5);
-                set_status(1, e5.toString());
+            } catch (UnknownHostException var14) {
+                System.out.println("telnet.connect() UnknownHostException: " + var14);
+                this.set_status(1, var14.toString());
                 this.s = null;
                 this.in = null;
                 this.out = null;
                 this.receiver = null;
                 this.connected = 0;
-            } catch (IOException e6) {
-                System.out.println("telnet.connect() IOException: " + e6);
-                set_status(1, e6.toString());
+            } catch (IOException var15) {
+                System.out.println("telnet.connect() IOException: " + var15);
+                this.set_status(1, var15.toString());
                 this.s = null;
                 this.in = null;
                 this.out = null;
@@ -393,113 +404,131 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                 this.connected = 0;
             }
         } else {
-            requestFocus();
+            this.requestFocus();
         }
     }
 
-    public boolean requestRemoteConnection(int i) {
-        int i2;
-        boolean z = false;
-        boolean z2 = false;
-        byte[] bArr = new byte[2];
-        while (!z2) {
-            if (!(z2)) {
-                bArr[0] = (byte) (i & TELNET_IAC);
-                bArr[1] = (byte) ((i & 65280) >>> 8);
-                if (this.remconsObj.ParentApp.optional_features.contains("ENCRYPT_KEY")) {
-                    for (int i3 = 0; i3 < this.sessionKey.length; i3++) {
-                        byte[] bArr2 = this.sessionKey;
-                        bArr2[i3] = (byte) (bArr2[i3] ^ ((byte) this.remconsObj.ParentApp.enc_key.charAt(i3 % this.remconsObj.ParentApp.enc_key.length())));
+    public boolean requestRemoteConnection(int var1) {
+        boolean var2 = false;
+        byte var3 = 0;
+        byte[] var4 = new byte[2];
+        boolean var5 = false;
+
+        while (var3 != 4) {
+            byte var16;
+            switch (var3) {
+                case 0:
+                    var4[0] = (byte) (var1 & 255);
+                    var4[1] = (byte) ((var1 & '\uff00') >>> 8);
+                    if (this.remconsObj.ParentApp.optional_features.contains("ENCRYPT_KEY")) {
+                        for (int var6 = 0; var6 < this.sessionKey.length; ++var6) {
+                            this.sessionKey[var6] ^= (byte) this.remconsObj.ParentApp.enc_key.charAt(var6 % this.remconsObj.ParentApp.enc_key.length());
+                        }
+
+                        if (this.remconsObj.ParentApp.optional_features.contains("ENCRYPT_VMKEY")) {
+                            var4[1] = (byte) (var4[1] | 64);
+                        } else {
+                            var4[1] = (byte) (var4[1] | 128);
+                        }
                     }
-                    if (this.remconsObj.ParentApp.optional_features.contains("ENCRYPT_VMKEY")) {
-                        bArr[1] = (byte) (bArr[1] | 64);
-                    } else {
-                        bArr[1] = (byte) (bArr[1] | 128);
+
+                    byte[] var17 = new byte[var4.length + this.sessionKey.length];
+                    System.arraycopy(var4, 0, var17, 0, var4.length);
+                    System.arraycopy(this.sessionKey, 0, var17, var4.length, this.sessionKey.length);
+                    String var7 = new String(var17);
+                    this.transmit(var7);
+                    var3 = 1;
+                    break;
+                case 1:
+                    try {
+                        var16 = this.in.readByte();
+                    } catch (IOException var15) {
+                        var2 = false;
+                        var3 = 4;
+                        System.out.println("Socket Read failed.");
+                        break;
                     }
-                }
-                byte[] bArr3 = new byte[bArr.length + this.sessionKey.length];
-                System.arraycopy(bArr, 0, bArr3, 0, bArr.length);
-                System.arraycopy(this.sessionKey, 0, bArr3, bArr.length, this.sessionKey.length);
-                transmit(new String(bArr3));
-                z2 = true;
-            } else if (z2) {
-                try {
-                    byte readByte = this.in.readByte();
-                    switch (readByte) {
+
+                    switch (var16) {
                         case 81:
                             System.out.println("Access denied.");
-                            set_status(1, locinfo.STATUSSTR_300b);
+                            this.set_status(1, locinfo.STATUSSTR_300b);
                             if (null != this.remconsObj.ParentApp.dispFrame) {
                                 new VErrorDialog(this.remconsObj.ParentApp.dispFrame, locinfo.DIALOGSTR_202f, locinfo.DIALOGSTR_205f, true);
                                 this.remconsObj.ParentApp.dispFrame.setVisible(false);
                             } else {
                                 new VErrorDialog(locinfo.DIALOGSTR_205f, true);
                             }
-                            z = false;
-                            z2 = true;
+
+                            var2 = false;
+                            var3 = 4;
                             this.remconsObj.ParentApp.stop();
                             continue;
                         case 82:
-                            set_status(1, locinfo.STATUSSTR_300c);
+                            this.set_status(1, locinfo.STATUSSTR_300c);
                             System.out.println("Authenticated");
-                            z = true;
+                            var2 = true;
                             this.remconsObj.licensed = true;
-                            z2 = true;
+                            var3 = 4;
                             continue;
                         case 83:
                         case 89:
                             System.out.println("Authenticated, but busy, negotiating");
+                            int var8;
                             if (0 == this.remconsObj.retry_connection_count) {
-                                i2 = negotiateBusy();
-                                System.out.println("negotiateResult:" + i2);
+                                var8 = this.negotiateBusy();
+                                System.out.println("negotiateResult:" + var8);
                             } else {
                                 System.out.println("Overriding seize option for internal retry");
-                                i2 = 1;
+                                var8 = 1;
                             }
-                            switch (i2) {
+
+                            switch (var8) {
                                 case 0:
                                     System.out.println("Connection cancelled by user");
                                     if (null != this.remconsObj.ParentApp.dispFrame) {
                                         this.remconsObj.ParentApp.dispFrame.setVisible(false);
                                     }
-                                    z = false;
-                                    z2 = true;
+
+                                    var2 = false;
+                                    var3 = 4;
                                     continue;
                                 case 1:
-                                    bArr[0] = 85;
-                                    bArr[1] = 0;
-                                    byte[] bArr4 = new byte[bArr.length];
-                                    System.arraycopy(bArr, 0, bArr4, 0, bArr.length);
+                                    var4[0] = 85;
+                                    var4[1] = 0;
+                                    byte[] var9 = new byte[var4.length];
+                                    System.arraycopy(var4, 0, var9, 0, var4.length);
                                     System.out.println("Seizing connection, sending command 0x0055");
-                                    transmit(new String(bArr4));
-                                    z2 = true;
-                                    set_status(1, locinfo.STATUSSTR_3118);
+                                    String var10 = new String(var9);
+                                    this.transmit(var10);
+                                    var3 = 3;
+                                    this.set_status(1, locinfo.STATUSSTR_3118);
                                     continue;
                                 case 2:
-                                    bArr[0] = 86;
-                                    bArr[1] = 0;
+                                    var4[0] = 86;
+                                    var4[1] = 0;
                                     System.out.println("Sharing connection, sending command 0x0056");
-                                    byte[] bArr5 = new byte[bArr.length];
-                                    System.arraycopy(bArr, 0, bArr5, 0, bArr.length);
-                                    transmit(new String(bArr5));
-                                    z2 = true;
-                                    continue;
+                                    byte[] var11 = new byte[var4.length];
+                                    System.arraycopy(var4, 0, var11, 0, var4.length);
+                                    String var12 = new String(var11);
+                                    this.transmit(var12);
+                                    var3 = 2;
                                 default:
                                     continue;
                             }
                         case 84:
-                        case SCSI.SCSI_MODE_SELECT /* 85 */:
+                        case 85:
                         case 86:
                         default:
-                            System.out.println("rqrmtconn default: " + (int) readByte);
-                            z = true;
-                            z2 = true;
+                            System.out.println("rqrmtconn default: " + var16);
+                            var2 = true;
+                            var3 = 4;
                             continue;
                         case 87:
                             System.out.println("Received No License Notification");
                             this.remconsObj.licensed = false;
-                            z = false;
-                            z2 = true;
+                            var2 = false;
+                            var3 = 4;
                             continue;
                         case 88:
                             System.out.println("No free Sessions Notification");
@@ -509,22 +538,29 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                             } else {
                                 new VErrorDialog(locinfo.DIALOGSTR_2030, true);
                             }
-                            z = false;
-                            z2 = true;
+
+                            var2 = false;
+                            var3 = 4;
                             this.remconsObj.ParentApp.stop();
+                            continue;
                     }
-                } catch (IOException e) {
-                    z = false;
-                    z2 = true;
-                    System.out.println("Socket Read failed.");
-                }
-            } else if (z2) {
-                z = false;
-                z2 = true;
-            } else if (z2) {
-                z2 = true;
-                try {
-                    switch (this.in.readByte()) {
+                case 2:
+                    var2 = false;
+                    var3 = 4;
+                    break;
+                case 3:
+                    var3 = 4;
+
+                    try {
+                        var16 = this.in.readByte();
+                    } catch (IOException var14) {
+                        var2 = false;
+                        var3 = 4;
+                        System.out.println("Socket Read failed.");
+                        continue;
+                    }
+
+                    switch (var16) {
                         case 81:
                             if (null != this.remconsObj.ParentApp.dispFrame) {
                                 new VErrorDialog(this.remconsObj.ParentApp.dispFrame, locinfo.DIALOGSTR_202f, locinfo.DIALOGSTR_2047, true);
@@ -532,35 +568,32 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
                             } else {
                                 new VErrorDialog(locinfo.DIALOGSTR_2047, true);
                             }
-                            z = false;
-                            continue;
+
+                            var2 = false;
+                            break;
                         case 82:
                             this.remconsObj.ParentApp.moveUItoInit(true);
-                            z = true;
+                            var2 = true;
                     }
-                } catch (IOException e2) {
-                    z = false;
-                    z2 = true;
-                    System.out.println("Socket Read failed.");
-                }
             }
         }
 
-        return z;
+        return var2;
     }
 
     public int negotiateBusy() {
-        int i = 0;
+        byte var1 = 0;
         this.remconsObj.ParentApp.moveUItoInit(false);
-        switch (new VSeizeDialog(this.remconsObj).getUserInput()) {
+        VSeizeDialog var2 = new VSeizeDialog(this.remconsObj);
+        switch (var2.getUserInput()) {
             case 0:
-                i = 0;
+                var1 = 0;
                 break;
             case 2:
-                i = 1;
-                break;
+                var1 = 1;
         }
-        return i;
+
+        return var1;
     }
 
     public void connect(String str, String str2, int i, int i2, remcons remconsVar) {
@@ -597,7 +630,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
             }
             set_status(1, locinfo.STATUSSTR_300d);
             reinit_vars();
-            this.decryption_active = false;
+            boolean decryption_active = false;
         }
     }
 
@@ -629,11 +662,10 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
             case MediaAccess.F3_120M_512 /* 13 */:
                 if (!keyEvent.isShiftDown()) {
                     str = "\r";
-                    break;
                 } else {
                     str = "\n";
-                    break;
                 }
+                break;
             case MediaAccess.RemovableMedia /* 11 */:
             case MediaAccess.FixedMedia /* 12 */:
             default:
@@ -645,7 +677,7 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
 
     public synchronized String translate_special_key(KeyEvent keyEvent) {
         String str = "";
-        if (keyEvent.getKeyCode() == MediaAccess.F5_180_512) {
+        if (keyEvent.getKeyCode() == MediaAccess.F5_180_512) { /* 9 */
             keyEvent.consume();
             str = "\t";
         }
@@ -662,96 +694,122 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
 
     @Override
     public void run() {
-        int i;
-        boolean z = false;
-        byte[] bArr = new byte[1024];
-        int i2 = 0;
+        boolean var2 = false;
+        byte var3 = 0;
+        boolean var4 = false;
+        boolean var5 = false;
+        byte[] var6 = new byte[1024];
+        int var10 = 0;
         this.dvc_mode = true;
         System.out.println("Starting receiver run");
+
         try {
             while (true) {
-                if (this.s == null || this.in == null) {
-                    System.out.println("telnet.run() s or in is null");
-                } else {
+                int var7;
+                try {
+                    if (this.s == null || this.in == null) {
+                        System.out.println("telnet.run() s or in is null");
+                        break;
+                    }
+
                     this.s.setSoTimeout(1000);
-                    i = this.in.read(bArr);
-                    if (i >= 0) {
-                        for (int i4 = 0; i4 < i; i4++) {
-                            if (this.dbg_print == 1000) {
-                                this.dbg_print = 0;
-                            }
-                            this.dbg_print++;
-                            this.remconsObj.fdConnState = this.remconsObj.ParentApp.virtdevsObj.fdConnected;
-                            this.remconsObj.cdConnState = this.remconsObj.ParentApp.virtdevsObj.cdConnected;
-                            char c = (char) (((char) bArr[i4]) & 255);
-                            if (this.dvc_mode) {
-                                if (this.dvc_encryption) {
-                                    switch (this.cipher) {
-                                        case 1:
-                                            c = (char) (c ^ ((char) (this.RC4decrypter.randomValue() & TELNET_IAC)));
-                                            break;
-                                        case 2:
-                                            c = (char) (c ^ ((char) (this.aes128decrypter.randomValue() & 255)));
-                                            break;
-                                        case 3:
-                                            c = (char) (c ^ ((char) (this.aes256decrypter.randomValue() & 255)));
-                                            break;
-                                        default:
-                                            System.out.println("Unknown encryption");
-                                            break;
-                                    }
-                                    c = (char) (c & 255);
-                                }
-                                this.dvc_mode = process_dvc(c);
-                                if (!this.dvc_mode) {
-                                    System.out.println("DVC mode turned off");
-                                    set_status(1, locinfo.STATUSSTR_300e);
-                                }
-                            } else if (c == 27) {
-                                z = true;
-                            } else if (z && c == '[') {
-                                z = true;
-                            } else if (z && c == 'R') {
-                                this.dvc_mode = true;
-                                this.dvc_encryption = true;
-                                set_status(1, locinfo.STATUSSTR_300f);
-                            } else if (z && c == 'r') {
-                                this.dvc_mode = true;
-                                this.dvc_encryption = false;
-                                set_status(1, locinfo.STATUSSTR_3004);
-                            } else {
-                                z = false;
-                            }
+                    var7 = this.in.read(var6);
+                } catch (InterruptedIOException var18) {
+                    continue;
+                } catch (Exception var19) {
+                    var7 = -1;
+                    ++var10;
+                }
+
+                if (var7 < 0) {
+                    if (var10 > 1) {
+                        System.out.println("Reading from stream failed for  " + var10 + "times");
+                        var10 = 0;
+                        break;
+                    }
+                } else {
+                    for (int var8 = 0; var8 < var7; ++var8) {
+                        if (this.dbg_print == 1000) {
+                            this.dbg_print = 0;
                         }
-                    } else if (i2 > 1) {
-                        System.out.println("Reading from stream failed for  " + i2 + "times");
+
+                        ++this.dbg_print;
+                        this.remconsObj.fdConnState = this.remconsObj.ParentApp.virtdevsObj.fdConnected;
+                        this.remconsObj.cdConnState = this.remconsObj.ParentApp.virtdevsObj.cdConnected;
+                        char var1 = (char) var6[var8];
+                        var1 = (char) (var1 & 255);
+                        if (this.dvc_mode) {
+                            if (this.dvc_encryption) {
+                                switch (this.cipher) {
+                                    case 1:
+                                        char var24 = (char) (this.RC4decrypter.randomValue() & 255);
+                                        var1 ^= var24;
+                                        break;
+                                    case 2:
+                                        char var23 = (char) (this.aes128decrypter.randomValue() & 255);
+                                        var1 ^= var23;
+                                        break;
+                                    case 3:
+                                        char var9 = (char) (this.aes256decrypter.randomValue() & 255);
+                                        var1 ^= var9;
+                                        break;
+                                    default:
+                                        boolean var25 = false;
+                                        System.out.println("Unknown encryption");
+                                }
+
+                                var1 = (char) (var1 & 255);
+                            }
+
+                            this.dvc_mode = this.process_dvc(var1);
+                            if (!this.dvc_mode) {
+                                System.out.println("DVC mode turned off");
+                                this.set_status(1, locinfo.STATUSSTR_300e);
+                            }
+                        } else if (var1 == 27) {
+                            var3 = 1;
+                        } else if (var3 == 1 && var1 == '[') {
+                            var3 = 2;
+                        } else if (var3 == 2 && var1 == 'R') {
+                            this.dvc_mode = true;
+                            this.dvc_encryption = true;
+                            this.set_status(1, locinfo.STATUSSTR_300f);
+                        } else if (var3 == 2 && var1 == 'r') {
+                            this.dvc_mode = true;
+                            this.dvc_encryption = false;
+                            this.set_status(1, locinfo.STATUSSTR_3004);
+                        } else {
+                            var3 = 0;
+                        }
                     }
                 }
             }
-        } catch (Exception e) {
-            System.out.println("telnet.run() Exception, class:" + e.getClass() + "  msg:" + e.getMessage());
-            e.printStackTrace();
+        } catch (Exception var20) {
+            System.out.println("telnet.run() Exception, class:" + var20.getClass() + "  msg:" + var20.getMessage());
+            var20.printStackTrace();
         } finally {
             if (!this.seized) {
-                int i6 = this.remconsObj.retry_connection_count;
-                remcons remconsVar3 = this.remconsObj;
-                this.screen.clearScreen();
-                if (i6 < 3) {
+                remcons var10001 = this.remconsObj;
+                if (this.remconsObj.retry_connection_count < 3) {
+                    this.screen.clearScreen();
                     System.out.println("Retrying connection");
-                    set_status(1, locinfo.STATUSSTR_3011);
+                    this.set_status(1, locinfo.STATUSSTR_3011);
                 } else {
+                    this.screen.clearScreen();
                     System.out.println("offline");
-                    set_status(1, locinfo.STATUSSTR_300d);
+                    this.set_status(1, locinfo.STATUSSTR_300d);
                 }
-                set_status(2, "");
-                set_status(3, "");
-                set_status(4, "");
+
+                this.set_status(2, "");
+                this.set_status(3, "");
+                this.set_status(4, "");
                 System.out.println("Actually Retrying connection");
                 this.remconsObj.retry_connection_flag = true;
             }
 
-            System.out.println("Completed receiver run");
         }
+
+        System.out.println("Completed receiver run");
     }
 
     public void change_key() {
@@ -929,7 +987,6 @@ public class telnet extends JPanel implements Runnable, MouseListener, FocusList
         keyEvent.consume();
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void sendCtrlAltDel() {
         byte[] bArr = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         bArr[2] = 5;

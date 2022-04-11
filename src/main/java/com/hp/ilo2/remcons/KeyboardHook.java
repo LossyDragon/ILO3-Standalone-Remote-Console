@@ -15,15 +15,28 @@ public class KeyboardHook {
 
     /* ILO3RemCon addition */
     public KeyboardHook(String str) {
-        // TODO Hardcoded for windows.
-        //  x86 and x64 files for Linux and Windows
         try {
-            String hookType = this.getClass().getClassLoader().getResource(str).getFile();
-            System.out.println(" Loading " + hookType + "...");
-            System.load(hookType + ".dll");
+            String hookFilename = str + ".dll";
+
+            String fileSeparator = System.getProperty("file.separator");
+            String tempDir = System.getProperty("java.io.tmpdir");
+            String osName = System.getProperty("os.name").toLowerCase();
+
+            if (tempDir == null) {
+                tempDir = osName.startsWith("windows") ? "C:\\TEMP" : "/tmp";
+            }
+
+            if (!tempDir.endsWith(fileSeparator)) {
+                tempDir = tempDir + fileSeparator;
+            }
+
+            String hookFile = tempDir + hookFilename;
+
+            System.out.println(" Loading " + hookFile + "...");
+            System.load(hookFile);
             System.out.println(" Loaded..!");
         } catch (Exception e) {
-            System.out.println("Error loading library HpqKbHook.dll - " + e);
+            System.err.println("Error loading library HpqKbHook.dll - " + e);
         }
     }
 

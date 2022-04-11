@@ -8,7 +8,7 @@ import util.Utils;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.ImageObserver;
-import java.io.FileInputStream;
+import java.io.*;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -167,13 +167,18 @@ public class remcons extends JPanel implements TimerListener, Runnable {
                     str = "HpqKbHook-x86-linux-32";
                 }
             }
-            this.kHook = new KeyboardHook(str);
-            if (this.kHook == null) {
-                System.out.println("remcons: kHook = null, Failed to initialize and load kHook");
+            if (ExtractKeyboardDll(str)) {
+                this.kHook = new KeyboardHook(str);
+                if (this.kHook == null) {
+                    System.out.println("remcons: kHook = null, Failed to initialize and load kHook");
+                } else {
+                    this.kbHookAvailable = true;
+                    this.kHook.clearKeymap();
+                }
             } else {
-                this.kbHookAvailable = true;
-                this.kHook.clearKeymap();
+                System.out.println("ExtractKeyboardDll() returns false");
             }
+
         }
         this.session = new cim(this);
         this.telnetObj = new cmd();
@@ -311,7 +316,62 @@ public class remcons extends JPanel implements TimerListener, Runnable {
         }
     }
 
-    // Removed ExtractKeyboardDll(String str)
+
+    public boolean ExtractKeyboardDll(String str) {
+        boolean result;
+        String tempDir = System.getProperty("java.io.tmpdir");
+        String osName = System.getProperty("os.name").toLowerCase();
+        String fileSeparator = System.getProperty("file.separator");
+
+        if (osName.startsWith("windows") || osName.startsWith("linux")) {
+            if (tempDir == null) {
+                tempDir = osName.startsWith("windows") ? "C:\\TEMP" : "/tmp";
+            }
+
+            File file = new File(tempDir);
+            if (!file.exists()) {
+                file.mkdir();
+            }
+
+            if (!tempDir.endsWith(fileSeparator)) {
+                tempDir = tempDir + fileSeparator;
+            }
+
+            String stringBuffer = tempDir + str + ".dll";
+            System.out.println("checking for kbddll" + stringBuffer);
+
+            if (new File(stringBuffer).exists()) {
+                System.out.println(str + " already present ..");
+                return true;
+            }
+
+            System.out.println("Extracting " + str + "...");
+            byte[] bArr = new byte[4096];
+
+            try {
+                InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(str);
+                FileOutputStream fileOutputStream = new FileOutputStream(stringBuffer);
+                while (true) {
+                    int read = resourceAsStream.read(bArr, 0, 4096);
+                    if (read == -1) {
+                        break;
+                    }
+                    fileOutputStream.write(bArr, 0, read);
+                }
+                System.out.println("Writing dll to " + stringBuffer + "complete");
+                resourceAsStream.close();
+                fileOutputStream.close();
+                result = true;
+            } catch (IOException e) {
+                System.out.println("dllExtract: " + e);
+                result = false;
+            }
+        } else {
+            System.out.println("Cannot load keyboardHook DLL. Non Windows-Linux client system.");
+            result = false;
+        }
+        return result;
+    }
 
     public void stop() {
         if (this.locale_setter != null && this.locale_setter.isAlive()) {
