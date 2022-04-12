@@ -50,63 +50,65 @@ public class KeyboardHook {
 
     public void clearKeymap() {
         for (int i = 0; i < 256; i++) {
-            this.keyMap[i] = 0;
+            keyMap[i] = 0;
         }
     }
 
     public void setKeyboardLayoutId(int i) {
-        this.keyboardLayoutId = i;
+        keyboardLayoutId = i;
     }
 
+    @SuppressWarnings("unused")
     public void HandleSpecialKey(int i, int i2) {
-        if (1041 == this.keyboardLayoutId && 1 == this.keyMap[25] && 0 == this.keyMap[164]) {
-            this.keyMap[25] = 0;
+        if (1041 == keyboardLayoutId && 1 == keyMap[25] && 0 == keyMap[164]) {
+            keyMap[25] = 0;
         }
     }
 
+    @SuppressWarnings("unused")
     public byte[] HandleHookKey(int i, int i2, boolean z, boolean z2) {
         int i3;
-        int i4 = this.keyMap[i];
-        Arrays.fill(this.kcmd, (byte) 0);
-        this.kcmd[0] = 1;
-        this.kcmdValid = false;
+        int i4 = keyMap[i];
+        Arrays.fill(kcmd, (byte) 0);
+        kcmd[0] = 1;
+        kcmdValid = false;
         if (z2) {
             System.out.println("HandleHookKey ctl-Alt-Del clearkeymap");
             clearKeymap();
-            this.kcmdValid = true;
+            kcmdValid = true;
         } else {
-            if (1041 == this.keyboardLayoutId && (243 == i || 244 == i)) {
+            if (1041 == keyboardLayoutId && (243 == i || 244 == i)) {
                 i = 243;
-                i4 = this.keyMap[243];
+                i4 = keyMap[243];
                 if (z) {
-                    this.keyMap[243] = 0;
+                    keyMap[243] = 0;
                 } else {
-                    this.keyMap[243] = 1;
+                    keyMap[243] = 1;
                 }
             } else if (z) {
-                this.keyMap[i] = 1;
+                keyMap[i] = 1;
             } else {
-                this.keyMap[i] = 0;
+                keyMap[i] = 0;
             }
-            if (i4 != this.keyMap[i]) {
-                this.kcmdValid = true;
+            if (i4 != keyMap[i]) {
+                kcmdValid = true;
                 HandleSpecialKey(i, z ? 1 : 0);
                 int i5 = 0;
                 for (int i6 = 0; i6 < 256; i6++) {
-                    if (this.keyMap[i6] != 0) {
-                        if (-16711935 == this.keyboardLayoutId) {
-                            i3 = this.linkey_to_hid_dll_en_US[i6];
-                        } else if (1041 == this.keyboardLayoutId) {
-                            i3 = this.winkey_to_hid_dll_ja_JP[i6];
+                    if (keyMap[i6] != 0) {
+                        if (-16711935 == keyboardLayoutId) {
+                            i3 = linkey_to_hid_dll_en_US[i6];
+                        } else if (1041 == keyboardLayoutId) {
+                            i3 = winkey_to_hid_dll_ja_JP[i6];
                         } else {
-                            i3 = this.winkey_to_hid_dll_en_US[i6];
+                            i3 = winkey_to_hid_dll_en_US[i6];
                         }
                         if (!(i3 == 0 || i3 == 255)) {
                             if ((i3 & 224) == 224) {
-                                byte[] bArr = this.kcmd;
+                                byte[] bArr = kcmd;
                                 bArr[2] = (byte) (bArr[2] | ((byte) (1 << (i3 ^ 224))));
                             } else {
-                                this.kcmd[4 + i5] = (byte) i3;
+                                kcmd[4 + i5] = (byte) i3;
                                 i5++;
                                 if (i5 == 6) {
                                     i5 = 5;
@@ -117,7 +119,7 @@ public class KeyboardHook {
                 }
             }
         }
-        this.kcmd[0] = 1;
-        return this.kcmd;
+        kcmd[0] = 1;
+        return kcmd;
     }
 }

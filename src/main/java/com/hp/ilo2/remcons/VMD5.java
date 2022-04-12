@@ -1,29 +1,22 @@
 package com.hp.ilo2.remcons;
 
 
+import java.util.Arrays;
+
+@SuppressWarnings("unused") // It is being used, not sure why it says it's not.
 public final class VMD5 implements Cloneable {
-    private byte[] digestBits;
-    private String algorithm;
-    private int[] state;
-    private long count;
+
     private byte[] buffer;
+    private byte[] digestBits;
+    private int[] state;
     private int[] transformBuffer;
-    private static final int S11 = 7;
-    private static final int S12 = 12;
+    private long count;
     private static final int S13 = 17;
     private static final int S14 = 22;
-    private static final int S21 = 5;
-    private static final int S22 = 9;
     private static final int S23 = 14;
     private static final int S24 = 20;
-    private static final int S31 = 4;
-    private static final int S32 = 11;
     private static final int S33 = 16;
-    private static final int S34 = 23;
-    private static final int S41 = 6;
-    private static final int S42 = 10;
     private static final int S43 = 15;
-    private static final int S44 = 21;
 
     public VMD5() {
         init();
@@ -31,15 +24,20 @@ public final class VMD5 implements Cloneable {
 
     private VMD5(VMD5 vmd5) {
         this();
-        this.state = new int[vmd5.state.length];
-        System.arraycopy(vmd5.state, 0, this.state, 0, vmd5.state.length);
-        this.transformBuffer = new int[vmd5.transformBuffer.length];
-        System.arraycopy(vmd5.transformBuffer, 0, this.transformBuffer, 0, vmd5.transformBuffer.length);
-        this.buffer = new byte[vmd5.buffer.length];
-        System.arraycopy(vmd5.buffer, 0, this.buffer, 0, vmd5.buffer.length);
-        this.digestBits = new byte[vmd5.digestBits.length];
-        System.arraycopy(vmd5.digestBits, 0, this.digestBits, 0, vmd5.digestBits.length);
-        this.count = vmd5.count;
+
+        state = new int[vmd5.state.length];
+        System.arraycopy(vmd5.state, 0, state, 0, vmd5.state.length);
+
+        transformBuffer = new int[vmd5.transformBuffer.length];
+        System.arraycopy(vmd5.transformBuffer, 0, transformBuffer, 0, vmd5.transformBuffer.length);
+
+        buffer = new byte[vmd5.buffer.length];
+        System.arraycopy(vmd5.buffer, 0, buffer, 0, vmd5.buffer.length);
+
+        digestBits = new byte[vmd5.digestBits.length];
+        System.arraycopy(vmd5.digestBits, 0, digestBits, 0, vmd5.digestBits.length);
+
+        count = vmd5.count;
     }
 
     private int F(int i, int i2, int i3) {
@@ -79,17 +77,19 @@ public final class VMD5 implements Cloneable {
     }
 
     void transform(byte[] bArr, int i) {
-        int[] iArr = this.transformBuffer;
-        int i2 = this.state[0];
-        int i3 = this.state[1];
-        int i4 = this.state[2];
-        int i5 = this.state[3];
+        int[] iArr = transformBuffer;
+        int i2 = state[0];
+        int i3 = state[1];
+        int i4 = state[2];
+        int i5 = state[3];
+
         for (int i6 = 0; i6 < S33; i6++) {
             iArr[i6] = bArr[(i6 * 4) + i] & telnet.TELNET_IAC;
             for (int i7 = 1; i7 < 4; i7++) {
                 iArr[i6] = iArr[i6] + ((bArr[((i6 * 4) + i7) + i] & telnet.TELNET_IAC) << (i7 * 8));
             }
         }
+
         int FF = FF(i2, i3, i4, i5, iArr[0], 7, -680876936);
         int FF2 = FF(i5, FF, i3, i4, iArr[1], 12, -389564586);
         int FF3 = FF(i4, FF2, FF, i3, iArr[2], S13, 606105819);
@@ -154,58 +154,59 @@ public final class VMD5 implements Cloneable {
         int II14 = II(II10, II13, II12, II11, iArr[11], 10, -1120210379);
         int II15 = II(II11, II14, II13, II12, iArr[2], S43, 718787259);
         int II16 = II(II12, II15, II14, II13, iArr[9], 21, -343485551);
-        int[] iArr2 = this.state;
+
+        int[] iArr2 = state;
         iArr2[0] = iArr2[0] + II13;
-        int[] iArr3 = this.state;
+
+        int[] iArr3 = state;
         iArr3[1] = iArr3[1] + II16;
-        int[] iArr4 = this.state;
+
+        int[] iArr4 = state;
         iArr4[2] = iArr4[2] + II15;
-        int[] iArr5 = this.state;
+
+        int[] iArr5 = state;
         iArr5[3] = iArr5[3] + II14;
     }
 
     public void init() {
-        this.state = new int[4];
-        this.transformBuffer = new int[S33];
-        this.buffer = new byte[64];
-        this.digestBits = new byte[S33];
-        this.count = 0L;
-        this.state[0] = 1732584193;
-        this.state[1] = -271733879;
-        this.state[2] = -1732584194;
-        this.state[3] = 271733878;
-        for (int i = 0; i < this.digestBits.length; i++) {
-            this.digestBits[i] = 0;
-        }
-    }
-
-    public void engineReset() {
-        init();
+        state = new int[4];
+        transformBuffer = new int[S33];
+        buffer = new byte[64];
+        digestBits = new byte[S33];
+        count = 0L;
+        state[0] = 1732584193;
+        state[1] = -271733879;
+        state[2] = -1732584194;
+        state[3] = 271733878;
+        Arrays.fill(digestBits, (byte) 0);
     }
 
     public synchronized void engineUpdate(byte b) {
-        int i = (int) ((this.count >>> 3) & 63);
-        this.count += 8;
-        this.buffer[i] = b;
+        int i = (int) ((count >>> 3) & 63);
+        count += 8;
+        buffer[i] = b;
         if (i >= 63) {
-            transform(this.buffer, 0);
+            transform(buffer, 0);
         }
     }
 
     public synchronized void engineUpdate(byte[] bArr, int i, int i2) {
         int i3 = i;
         while (i2 > 0) {
-            int i4 = (int) ((this.count >>> 3) & 63);
+            int i4 = (int) ((count >>> 3) & 63);
+
             if (i4 != 0 || i2 <= 64) {
-                this.count += 8;
-                this.buffer[i4] = bArr[i3];
+                count += 8;
+                buffer[i4] = bArr[i3];
+
                 if (i4 >= 63) {
-                    transform(this.buffer, 0);
+                    transform(buffer, 0);
                 }
+
                 i3++;
                 i2--;
             } else {
-                this.count += 512;
+                count += 512;
                 transform(bArr, i3);
                 i2 -= 64;
                 i3 += 64;
@@ -213,37 +214,10 @@ public final class VMD5 implements Cloneable {
         }
     }
 
-    private void finish() {
-        byte[] bArr = new byte[8];
-        for (int i = 0; i < 8; i++) {
-            bArr[i] = (byte) ((this.count >>> (i * 8)) & 255);
-        }
-        int i2 = ((int) (this.count >> 3)) & 63;
-        byte[] bArr2 = new byte[i2 < 56 ? 56 - i2 : 120 - i2];
-        bArr2[0] = Byte.MIN_VALUE;
-        engineUpdate(bArr2, 0, bArr2.length);
-        engineUpdate(bArr, 0, bArr.length);
-        for (int i3 = 0; i3 < 4; i3++) {
-            for (int i4 = 0; i4 < 4; i4++) {
-                this.digestBits[(i3 * 4) + i4] = (byte) ((this.state[i3] >>> (i4 * 8)) & telnet.TELNET_IAC);
-            }
-        }
-    }
 
-    public byte[] engineDigest() {
-        finish();
-        byte[] bArr = new byte[S33];
-        System.arraycopy(this.digestBits, 0, bArr, 0, S33);
-        init();
-        return bArr;
-    }
-
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public Object clone() {
         return new VMD5(this);
-    }
-
-    public void reset() {
-        engineReset();
     }
 
     public void update(byte b) {
@@ -256,10 +230,5 @@ public final class VMD5 implements Cloneable {
 
     public void update(byte[] bArr) {
         engineUpdate(bArr, 0, bArr.length);
-    }
-
-    public byte[] digest() {
-        this.digestBits = engineDigest();
-        return this.digestBits;
     }
 }
