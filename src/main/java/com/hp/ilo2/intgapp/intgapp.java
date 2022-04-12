@@ -25,6 +25,7 @@ import javax.swing.*;
 import util.Http;
 import util.Utils;
 
+@SuppressWarnings("deprecation")
 public class intgapp extends JApplet implements Runnable, ActionListener, ItemListener {
 
     /* ILO3RemCon addition */
@@ -45,9 +46,6 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
     JMenuItem ctlAltBack;
     JMenuItem ctlAltDel;
     JMenuItem hotKeys;
-    JMenuItem mdebug1;
-    JMenuItem mdebug2;
-    JMenuItem mdebug3;
     JMenuItem momPress;
     JMenuItem numLock;
     JMenuItem powerCycle;
@@ -58,15 +56,12 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
     JPanel dispStatusBar;
     JScrollPane scroller;
     String rcErrMessage;
-    int cdMenuItems;
-    int fdMenuItems;
     int vdmenuIndx;
     private MediaAccess ma;
     private final int REMCONS_MAX_FN_KEYS = 12;
     private final int REMCONS_MAX_KBD_LAYOUT = 17;
     public JFrame dispFrame;
     public JMenuItem vdMenuItemCrImage;
-    public JPanel mainPanel;
     public String enc_key;
     public String enclosure;
     public String ilo_fqdn;
@@ -82,15 +77,13 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
     public byte[] enc_key_val = new byte[16];
     public int bay = 0;
     public int blade = 0;
-    public int dheight;
-    public int dwidth;
     public jsonparser jsonObj = new jsonparser(this);
     public remcons remconsObj = new remcons(this);
     public virtdevs virtdevsObj = new virtdevs(this);
 
     /* ILO3RemCon addition */
     public intgapp(String hostname) {
-        this.hostName = hostname;
+        hostName = hostname;
     }
 
     /* ILO3RemCon addition */
@@ -140,30 +133,38 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
 
     public void init() {
         System.out.println("Started Retrieving parameters from ILO..");
-        String jSONRequest = this.jsonObj.getJSONRequest("rc_info");
+
+        String jSONRequest = jsonObj.getJSONRequest("rc_info");
         ApplyRcInfoParameters(jSONRequest);
+
         System.out.println("Completed Retrieving parameters from ILO");
-        this.virtdevsObj.init();
-        this.remconsObj.init();
+
+        virtdevsObj.init();
+        remconsObj.init();
+
         ui_init();
-        if (null == jSONRequest) {
+
+        if (jSONRequest == null) {
             System.out.println("Failed to retrive parameters from ILO");
-            new VErrorDialog(this.dispFrame, locinfo.DIALOGSTR_2014, this.rcErrMessage, true);
-            this.dispFrame.setVisible(false);
+            new VErrorDialog(dispFrame, locinfo.DIALOGSTR_2014, rcErrMessage, true);
+            dispFrame.setVisible(false);
         }
     }
 
     public void start() {
         try {
-            this.virtdevsObj.start();
-            this.remconsObj.start();
-            this.dispFrame.getContentPane().add(this.scroller, "Center");
-            this.dispFrame.getContentPane().add(this.dispStatusBar, "South");
-            this.scroller.validate();
-            this.dispStatusBar.validate();
-            this.dispFrame.validate();
+            virtdevsObj.start();
+            remconsObj.start();
+
+            dispFrame.getContentPane().add(scroller, "Center");
+            dispFrame.getContentPane().add(dispStatusBar, "South");
+            scroller.validate();
+            dispStatusBar.validate();
+            dispFrame.validate();
+
             System.out.println("Set Inital focus for session..");
-            this.remconsObj.session.requestFocus();
+            remconsObj.session.requestFocus();
+
             run();
         } catch (Exception e) {
             System.out.println("FAILURE: exception starting applet");
@@ -172,18 +173,21 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
     }
 
     public void stop() {
-        this.exit = true;
-        this.virtdevsObj.stop();
-        this.remconsObj.remconsUnInstallKeyboardHook();
-        this.remconsObj.stop();
+        exit = true;
+
+        virtdevsObj.stop();
+        remconsObj.remconsUnInstallKeyboardHook();
+        remconsObj.stop();
     }
 
     public void destroy() {
         System.out.println("Destroying subsustems");
-        this.exit = true;
-        this.remconsObj.remconsUnInstallKeyboardHook();
-        this.virtdevsObj.destroy();
-        this.remconsObj.destroy();
+
+        exit = true;
+
+        remconsObj.remconsUnInstallKeyboardHook();
+        virtdevsObj.destroy();
+        remconsObj.destroy();
     }
 
     @Override
@@ -192,132 +196,184 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
             try {
                 int i = 0;
                 int i2 = 0;
-                this.ma = new MediaAccess();
-                String[] devices = this.ma.devices();
+                ma = new MediaAccess();
+                String[] devices = ma.devices();
+
                 for (int i3 = 0; devices != null && i3 < devices.length; i3++) {
-                    int devtype = this.ma.devtype(devices[i3]);
+                    int devtype = ma.devtype(devices[i3]);
+
                     if (devtype == 2 || devtype == 5) {
                         i2++;
                     }
                 }
-                if (i2 > this.vdmenuIndx - 4) {
-                    ClassLoader classLoader = getClass().getClassLoader();
+
+                if (i2 > vdmenuIndx - 4) {
                     int i4 = 0;
+
                     while (true) {
                         if (devices == null || i4 >= devices.length) {
                             break;
                         }
+
                         boolean z = false;
-                        int devtype2 = this.ma.devtype(devices[i4]);
-                        for (int i5 = 0; i5 < this.vdmenuIndx - 4; i5++) {
-                            if (devices[i4].equals(this.vdMenu.getItem(i5).getText())) {
+                        int devtype2 = ma.devtype(devices[i4]);
+
+                        for (int i5 = 0; i5 < vdmenuIndx - 4; i5++) {
+                            if (devices[i4].equals(vdMenu.getItem(i5).getText())) {
                                 z = true;
                                 i++;
                             }
                         }
+
                         if (!z) {
                             if (devtype2 == 2) {
                                 System.out.println("Device attached: " + devices[i4]);
-                                this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(devices[i4]);
-                                this.vdMenuItems[this.vdmenuIndx].setActionCommand("fd" + devices[i4]);
-                                this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
+
+                                vdMenuItems[vdmenuIndx] = new JCheckBoxMenuItem(devices[i4]);
+                                vdMenuItems[vdmenuIndx].setActionCommand("fd" + devices[i4]);
+                                vdMenuItems[vdmenuIndx].addItemListener(this);
+
                                 if (devices[i4].equals("A:") || devices[i4].equals("B:")) {
-                                    this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "FloppyDisk.png")));
+                                    vdMenuItems[vdmenuIndx].setIcon(
+                                            new ImageIcon(Utils.getResourceImage(this, "FloppyDisk.png")));
                                 } else {
-                                    this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "usb.png")));
+                                    vdMenuItems[vdmenuIndx].setIcon(
+                                            new ImageIcon(Utils.getResourceImage(this, "usb.png")));
                                 }
-                                this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx], i);
-                                this.vdMenu.updateUI();
-                                this.vdmenuIndx++;
+
+                                vdMenu.add(vdMenuItems[vdmenuIndx], i);
+                                vdMenu.updateUI();
+                                vdmenuIndx++;
                             } else if (devtype2 == 5) {
                                 System.out.println("CDROM Hot plug device auto-update no supported at this time");
                             }
                         }
+
                         i4++;
                     }
-                } else if (i2 < this.vdmenuIndx - 4) {
+                } else if (i2 < vdmenuIndx - 4) {
                     int i6 = 0;
+
                     while (true) {
-                        if (i6 >= this.vdmenuIndx - 4) {
+                        if (i6 >= vdmenuIndx - 4) {
                             break;
                         }
+
                         boolean z2 = false;
+
                         for (int i7 = 0; devices != null && i7 < devices.length; i7++) {
-                            int devtype3 = this.ma.devtype(devices[i7]);
-                            if ((devtype3 == 2 || devtype3 == 5) && this.vdMenu.getItem(i6).getText().equals(devices[i7])) {
+                            int devtype3 = ma.devtype(devices[i7]);
+
+                            if ((devtype3 == 2 || devtype3 == 5)
+                                    && vdMenu.getItem(i6).getText().equals(devices[i7])) {
                                 z2 = true;
                             }
                         }
+
                         if (!z2) {
-                            System.out.println("Device removed: " + this.vdMenu.getItem(i6).getText());
-                            this.vdMenu.remove(i6);
-                            this.vdMenu.updateUI();
-                            this.vdmenuIndx--;
+                            System.out.println("Device removed: " + vdMenu.getItem(i6).getText());
+
+                            vdMenu.remove(i6);
+                            vdMenu.updateUI();
+                            vdmenuIndx--;
+
                             break;
                         }
+
                         i6++;
                     }
                 }
-                this.ma = null;
-                this.remconsObj.session.set_status(3, "");
-                this.remconsObj.sleepAtLeast(5000L);
+
+                ma = null;
+                remconsObj.session.set_status(3, "");
+                remconsObj.sleepAtLeast(5000L);
             } catch (InterruptedException e) {
                 System.out.println("Exception on intgapp");
             }
-            if (this.exit) {
+
+            if (exit) {
                 System.out.println("Intgapp stopped running");
                 return;
             }
         }
     }
 
-    public void paintComponent(Graphics graphics) {
-        intgapp.super.paintComponents(graphics);
-        graphics.drawString("Remote Console JApplet Loaded", 10, 50);
-    }
-
     public void ui_init() {
         System.out.println("Message from ui_init55");
-        this.dispFrame = new JFrame("JavaApplet IRC Window");
-        this.dispFrame.getContentPane().setLayout(new BorderLayout());
-        this.dispFrame.addWindowListener(new WindowCloser(this));
-        this.mainMenuBar = new JMenuBar();
-        this.dispStatusBar = new JPanel(new BorderLayout());
-        this.dispStatusBar.add(this.remconsObj.session.status_box, "West");
-        this.dispStatusBar.add(this.remconsObj.pwrStatusPanel, "East");
-        String jSONRequest = this.jsonObj.getJSONRequest("session_info");
+
+        dispFrame = new JFrame("JavaApplet IRC Window");
+        dispFrame.getContentPane().setLayout(new BorderLayout());
+        dispFrame.addWindowListener(new WindowCloser(this));
+
+        mainMenuBar = new JMenuBar();
+
+        dispStatusBar = new JPanel(new BorderLayout());
+        dispStatusBar.add(remconsObj.session.status_box, "West");
+        dispStatusBar.add(remconsObj.pwrStatusPanel, "East");
+
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-        this.dispFrame.setJMenuBar(this.mainMenuBar);
-        makePsMenu(this.mainMenuBar, this.jsonObj.getJSONNumber(jSONRequest, "reset_priv"));
-        makeVdMenu(this.mainMenuBar, this.jsonObj.getJSONNumber(jSONRequest, "virtual_media_priv"));
-        makeKbMenu(this.mainMenuBar);
-        makeHlpMenu(this.mainMenuBar);
-        this.scroller = new JScrollPane(this.remconsObj.session, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        this.scroller.setVisible(true);
+        dispFrame.setJMenuBar(mainMenuBar);
+
+        String jSONRequest = jsonObj.getJSONRequest("session_info");
+        makePsMenu(mainMenuBar, jsonObj.getJSONNumber(jSONRequest, "reset_priv"));
+        makeVdMenu(mainMenuBar, jsonObj.getJSONNumber(jSONRequest, "virtual_media_priv"));
+        makeKbMenu(mainMenuBar);
+        makeHlpMenu(mainMenuBar);
+
+        scroller = new JScrollPane(
+                remconsObj.session,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
+        );
+        scroller.setVisible(true);
+
         try {
-            String stringBuffer = locinfo.MENUSTR_1024 + " " + this.server_name + " " + locinfo.MENUSTR_1025 + " " + this.ilo_fqdn;
-            if (this.blade == 1 && this.in_enclosure) {
-                stringBuffer = stringBuffer + " " + locinfo.MENUSTR_1026 + " " + this.enclosure + " " + locinfo.MENUSTR_1027 + " " + this.bay;
+            String stringBuffer = locinfo.MENUSTR_1024
+                    + " "
+                    + server_name
+                    + " "
+                    + locinfo.MENUSTR_1025
+                    + " "
+                    + ilo_fqdn;
+
+            if (blade == 1 && in_enclosure) {
+                stringBuffer = stringBuffer
+                        + " "
+                        + locinfo.MENUSTR_1026
+                        + " "
+                        + enclosure
+                        + " "
+                        + locinfo.MENUSTR_1027
+                        + " "
+                        + bay;
             }
-            this.dispFrame.setTitle(stringBuffer);
+
+            dispFrame.setTitle(stringBuffer);
         } catch (Exception e) {
-            this.dispFrame.setTitle(locinfo.MENUSTR_1024 + " " + getCodeBase().getHost());
+            dispFrame.setTitle(locinfo.MENUSTR_1024 + " " + getCodeBase().getHost());
+
             System.out.println("IRC title not available");
         }
+
         int i = Toolkit.getDefaultToolkit().getScreenSize().width;
         int i2 = Toolkit.getDefaultToolkit().getScreenSize().height;
         int i3 = Math.min(i, 1054);
         int i4 = i2 < 874 ? i2 - 30 : 874;
         int i5 = i > 1054 ? (i - 1054) / 2 : 0;
         int i6 = i2 > 874 ? (i2 - 874) / 2 : 0;
-        this.dispFrame.setSize(i3, i4);
-        this.dispFrame.setLocation(i5, i6);
+
+        dispFrame.setSize(i3, i4);
+        dispFrame.setLocation(i5, i6);
+
         System.out.println("check dimensions " + i3 + " " + i4 + " " + i5 + " " + i6);
-        this.dispFrame.setVisible(true);
+
+        dispFrame.setVisible(true);
+
         try {
-            this.dispFrame.getInsets();
-            this.dispFrame.setIconImage(Utils.getResourceImage(this, "hp_logo.png"));
-            if (this.dispFrame.getIconImage() == null) {
+            dispFrame.getInsets();
+            dispFrame.setIconImage(Utils.getResourceImage(this, "hp_logo.png"));
+
+            if (dispFrame.getIconImage() == null) {
                 System.out.println("Dimage is null");
             }
         } catch (Exception e2) {
@@ -326,265 +382,318 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
     }
 
     protected void makeHlpMenu(JMenuBar jMenuBar) {
-        this.hlpMenu = new JMenu(locinfo.MENUSTR_1028);
-        this.aboutJirc = new JMenuItem(locinfo.MENUSTR_1029);
-        this.aboutJirc.addActionListener(this);
-        this.hlpMenu.add(this.aboutJirc);
-        jMenuBar.add(this.hlpMenu);
+        hlpMenu = new JMenu(locinfo.MENUSTR_1028);
+        aboutJirc = new JMenuItem(locinfo.MENUSTR_1029);
+
+        aboutJirc.addActionListener(this);
+        hlpMenu.add(aboutJirc);
+        jMenuBar.add(hlpMenu);
     }
 
     protected void makeVdMenu(JMenuBar jMenuBar, int i) {
-        this.vdMenu = new JMenu(locinfo.MENUSTR_1002);
+        vdMenu = new JMenu(locinfo.MENUSTR_1002);
+
         if (i == 1) {
-            jMenuBar.add(this.vdMenu);
+            jMenuBar.add(vdMenu);
         }
     }
 
     public void updateVdMenu() {
-        this.ma = new MediaAccess();
-        ClassLoader classLoader = getClass().getClassLoader();
-        String jSONRequest = this.jsonObj.getJSONRequest("vm_status");
-        String jSONArray = this.jsonObj.getJSONArray(jSONRequest, "options", 0);
-        String jSONArray2 = this.jsonObj.getJSONArray(jSONRequest, "options", 1);
-        String[] devices = this.ma.devices();
-        this.vdmenuIndx = 0;
+        ma = new MediaAccess();
+        String jSONRequest = jsonObj.getJSONRequest("vm_status");
+        String jSONArray = jsonObj.getJSONArray(jSONRequest, "options", 0);
+        String jSONArray2 = jsonObj.getJSONArray(jSONRequest, "options", 1);
+        String[] devices = ma.devices();
+
+        vdmenuIndx = 0;
+
         if (devices != null) {
-            this.vdMenuItems = new JCheckBoxMenuItem[devices.length + 5];
+            vdMenuItems = new JCheckBoxMenuItem[devices.length + 5];
+
             for (String device : devices) {
-                int devtype = this.ma.devtype(device);
+                int devtype = ma.devtype(device);
+
                 if (devtype == 5) {
-                    this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(device);
-                    this.vdMenuItems[this.vdmenuIndx].setActionCommand("cd" + device);
-                    this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
-                    this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "CD_Drive.png")));
-                    this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
-                    this.vdmenuIndx++;
+                    vdMenuItems[vdmenuIndx] = new JCheckBoxMenuItem(device);
+                    vdMenuItems[vdmenuIndx].setActionCommand("cd" + device);
+                    vdMenuItems[vdmenuIndx].addItemListener(this);
+                    vdMenuItems[vdmenuIndx].setIcon(
+                            new ImageIcon(Utils.getResourceImage(this, "CD_Drive.png")));
+                    vdMenu.add(vdMenuItems[vdmenuIndx]);
+                    vdmenuIndx++;
                 } else if (devtype == 2) {
-                    this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(device);
-                    this.vdMenuItems[this.vdmenuIndx].setActionCommand("fd" + device);
-                    this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
+                    vdMenuItems[vdmenuIndx] = new JCheckBoxMenuItem(device);
+                    vdMenuItems[vdmenuIndx].setActionCommand("fd" + device);
+                    vdMenuItems[vdmenuIndx].addItemListener(this);
+
                     if (device.equals("A:") || device.equals("B:")) {
-                        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "FloppyDisk.png")));
+                        vdMenuItems[vdmenuIndx].setIcon(
+                                new ImageIcon(Utils.getResourceImage(this, "FloppyDisk.png")));
                     } else {
-                        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "usb.png")));
+                        vdMenuItems[vdmenuIndx].setIcon(
+                                new ImageIcon(Utils.getResourceImage(this, "usb.png")));
                     }
-                    this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
-                    this.vdmenuIndx++;
+
+                    vdMenu.add(vdMenuItems[vdmenuIndx]);
+
+                    vdmenuIndx++;
                 }
             }
         } else {
-            this.vdMenuItems = new JCheckBoxMenuItem[5];
+            vdMenuItems = new JCheckBoxMenuItem[5];
             System.out.println("Media Access not available...");
         }
-        this.ma = null;
-        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1022 + " " + locinfo.MENUSTR_100A);
-        this.vdMenuItems[this.vdmenuIndx].setActionCommand("fd" + locinfo.STATUSSTR_3117);
-        this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
-        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Image_File.png")));
-        this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
-        this.vdmenuIndx++;
-        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1023 + locinfo.MENUSTR_100A);
-        this.vdMenuItems[this.vdmenuIndx].setActionCommand("FLOPPY");
-        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Network.png")));
-        this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
-        this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
-        this.vdmenuIndx++;
-        if (this.jsonObj.getJSONNumber(jSONArray, "vm_url_connected") == 1 && this.jsonObj.getJSONNumber(jSONArray, "vm_connected") == 1) {
-            this.fdSelected = true;
+
+        ma = null;
+
+        vdMenuItems[vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1022 + " " + locinfo.MENUSTR_100A);
+        vdMenuItems[vdmenuIndx].setActionCommand("fd" + locinfo.STATUSSTR_3117);
+        vdMenuItems[vdmenuIndx].addItemListener(this);
+        vdMenuItems[vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Image_File.png")));
+        vdMenu.add(vdMenuItems[vdmenuIndx]);
+        vdmenuIndx++;
+
+        vdMenuItems[vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1023 + locinfo.MENUSTR_100A);
+        vdMenuItems[vdmenuIndx].setActionCommand("FLOPPY");
+        vdMenuItems[vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Network.png")));
+        vdMenu.add(vdMenuItems[vdmenuIndx]);
+        vdMenuItems[vdmenuIndx].addItemListener(this);
+        vdmenuIndx++;
+
+        if (jsonObj.getJSONNumber(jSONArray, "vm_url_connected") == 1
+                && jsonObj.getJSONNumber(jSONArray, "vm_connected") == 1
+        ) {
+            fdSelected = true;
             lockFdMenu(false, "URL Removable Media");
         }
-        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1022 + " " + locinfo.MENUSTR_100B);
-        this.vdMenuItems[this.vdmenuIndx].setActionCommand("cd" + locinfo.STATUSSTR_3117);
-        this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
-        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Image_File.png")));
-        this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
-        this.vdmenuIndx++;
-        this.vdMenuItems[this.vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1023 + locinfo.MENUSTR_100B);
-        this.vdMenuItems[this.vdmenuIndx].setActionCommand("CDROM");
-        this.vdMenuItems[this.vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Network.png")));
-        this.vdMenu.add(this.vdMenuItems[this.vdmenuIndx]);
-        this.vdMenuItems[this.vdmenuIndx].addItemListener(this);
-        this.vdmenuIndx++;
-        if (this.jsonObj.getJSONNumber(jSONArray2, "vm_url_connected") == 1 && this.jsonObj.getJSONNumber(jSONArray2, "vm_connected") == 1) {
-            this.cdSelected = true;
+
+        vdMenuItems[vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1022 + " " + locinfo.MENUSTR_100B);
+        vdMenuItems[vdmenuIndx].setActionCommand("cd" + locinfo.STATUSSTR_3117);
+        vdMenuItems[vdmenuIndx].addItemListener(this);
+        vdMenuItems[vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Image_File.png")));
+        vdMenu.add(vdMenuItems[vdmenuIndx]);
+        vdmenuIndx++;
+
+        vdMenuItems[vdmenuIndx] = new JCheckBoxMenuItem(locinfo.MENUSTR_1023 + locinfo.MENUSTR_100B);
+        vdMenuItems[vdmenuIndx].setActionCommand("CDROM");
+        vdMenuItems[vdmenuIndx].setIcon(new ImageIcon(Utils.getResourceImage(this, "Network.png")));
+        vdMenu.add(vdMenuItems[vdmenuIndx]);
+        vdMenuItems[vdmenuIndx].addItemListener(this);
+        vdmenuIndx++;
+
+        if (jsonObj.getJSONNumber(jSONArray2, "vm_url_connected") == 1
+                && jsonObj.getJSONNumber(jSONArray2, "vm_connected") == 1
+        ) {
+            cdSelected = true;
             lockCdMenu(false, "URL CD/DVD-ROM");
         }
-        this.vdMenu.addSeparator();
-        this.vdMenuItemCrImage = new JMenuItem(locinfo.MENUSTR_100D);
-        this.vdMenuItemCrImage.setActionCommand("CreateDiskImage");
-        this.vdMenuItemCrImage.addActionListener(this);
-        this.vdMenu.add(this.vdMenuItemCrImage);
+
+        vdMenu.addSeparator();
+        vdMenuItemCrImage = new JMenuItem(locinfo.MENUSTR_100D);
+        vdMenuItemCrImage.setActionCommand("CreateDiskImage");
+        vdMenuItemCrImage.addActionListener(this);
+        vdMenu.add(vdMenuItemCrImage);
     }
 
     public void lockCdMenu(boolean z, String str) {
-        for (int i = 0; i < this.vdmenuIndx; i++) {
-            this.vdMenu.getItem(i).removeItemListener(this);
-            if (this.vdMenu.getItem(i).getActionCommand().startsWith("cd") || this.vdMenu.getItem(i).getActionCommand().equals("CDROM")) {
-                if (str.equals(this.vdMenu.getItem(i).getText())) {
-                    this.vdMenu.getItem(i).setSelected(!z);
+        for (int i = 0; i < vdmenuIndx; i++) {
+            vdMenu.getItem(i).removeItemListener(this);
+
+            if (vdMenu.getItem(i).getActionCommand().startsWith("cd")
+                    || vdMenu.getItem(i).getActionCommand().equals("CDROM")
+            ) {
+                if (str.equals(vdMenu.getItem(i).getText())) {
+                    vdMenu.getItem(i).setSelected(!z);
                 } else {
-                    this.vdMenu.getItem(i).setSelected(false);
-                    this.vdMenu.getItem(i).setEnabled(z);
+                    vdMenu.getItem(i).setSelected(false);
+                    vdMenu.getItem(i).setEnabled(z);
                 }
             }
-            this.vdMenu.getItem(i).addItemListener(this);
+
+            vdMenu.getItem(i).addItemListener(this);
         }
     }
 
     public void lockFdMenu(boolean z, String str) {
-        for (int i = 0; i < this.vdmenuIndx; i++) {
-            this.vdMenu.getItem(i).removeItemListener(this);
-            if (this.vdMenu.getItem(i).getActionCommand().startsWith("fd") || this.vdMenu.getItem(i).getActionCommand().equals("FLOPPY")) {
-                if (str.equals(this.vdMenu.getItem(i).getText())) {
-                    this.vdMenu.getItem(i).setSelected(!z);
+        for (int i = 0; i < vdmenuIndx; i++) {
+            vdMenu.getItem(i).removeItemListener(this);
+
+            if (vdMenu.getItem(i).getActionCommand().startsWith("fd")
+                    || vdMenu.getItem(i).getActionCommand().equals("FLOPPY")
+            ) {
+                if (str.equals(vdMenu.getItem(i).getText())) {
+                    vdMenu.getItem(i).setSelected(!z);
                 } else {
-                    this.vdMenu.getItem(i).setSelected(false);
-                    this.vdMenu.getItem(i).setEnabled(z);
+                    vdMenu.getItem(i).setSelected(false);
+                    vdMenu.getItem(i).setEnabled(z);
                 }
             }
-            this.vdMenu.getItem(i).addItemListener(this);
+
+            vdMenu.getItem(i).addItemListener(this);
         }
     }
 
     protected void makePsMenu(JMenuBar jMenuBar, int i) {
-        ClassLoader classLoader = getClass().getClassLoader();
-        this.psMenu = new JMenu(locinfo.MENUSTR_1001);
-        this.momPress = new JMenuItem(locinfo.MENUSTR_1004);
-        this.momPress.setIcon(new ImageIcon(Utils.getResourceImage(this, "press.png")));
-        this.momPress.setActionCommand("psMomPress");
-        this.momPress.addActionListener(this);
-        this.psMenu.add(this.momPress);
-        this.pressHold = new JMenuItem(locinfo.MENUSTR_1005);
-        this.pressHold.setIcon(new ImageIcon(Utils.getResourceImage(this, "hold.png")));
-        this.pressHold.setActionCommand("psPressHold");
-        this.pressHold.addActionListener(this);
-        this.powerCycle = new JMenuItem(locinfo.MENUSTR_1006);
-        this.powerCycle.setIcon(new ImageIcon(Utils.getResourceImage(this, "coldboot.png")));
-        this.powerCycle.setActionCommand("psPowerCycle");
-        this.powerCycle.addActionListener(this);
-        this.sysReset = new JMenuItem(locinfo.MENUSTR_1007);
-        this.sysReset.setIcon(new ImageIcon(Utils.getResourceImage(this, "reset.png")));
-        this.sysReset.setActionCommand("psSysReset");
-        this.sysReset.addActionListener(this);
+        psMenu = new JMenu(locinfo.MENUSTR_1001);
+
+        momPress = new JMenuItem(locinfo.MENUSTR_1004);
+        momPress.setIcon(new ImageIcon(Utils.getResourceImage(this, "press.png")));
+        momPress.setActionCommand("psMomPress");
+        momPress.addActionListener(this);
+        psMenu.add(momPress);
+
+        pressHold = new JMenuItem(locinfo.MENUSTR_1005);
+        pressHold.setIcon(new ImageIcon(Utils.getResourceImage(this, "hold.png")));
+        pressHold.setActionCommand("psPressHold");
+        pressHold.addActionListener(this);
+
+        powerCycle = new JMenuItem(locinfo.MENUSTR_1006);
+        powerCycle.setIcon(new ImageIcon(Utils.getResourceImage(this, "coldboot.png")));
+        powerCycle.setActionCommand("psPowerCycle");
+        powerCycle.addActionListener(this);
+
+        sysReset = new JMenuItem(locinfo.MENUSTR_1007);
+        sysReset.setIcon(new ImageIcon(Utils.getResourceImage(this, "reset.png")));
+        sysReset.setActionCommand("psSysReset");
+        sysReset.addActionListener(this);
+
         if (i == 1) {
-            jMenuBar.add(this.psMenu);
+            jMenuBar.add(psMenu);
         }
     }
 
     public void updatePsMenu(int i) {
         if (0 == i) {
-            this.psMenu.remove(this.pressHold);
-            this.psMenu.remove(this.powerCycle);
-            this.psMenu.remove(this.sysReset);
+            psMenu.remove(pressHold);
+            psMenu.remove(powerCycle);
+            psMenu.remove(sysReset);
             return;
         }
-        this.psMenu.remove(this.pressHold);
-        this.psMenu.remove(this.powerCycle);
-        this.psMenu.remove(this.sysReset);
-        this.psMenu.add(this.pressHold);
-        this.psMenu.add(this.powerCycle);
-        this.psMenu.add(this.sysReset);
+
+        psMenu.remove(pressHold);
+        psMenu.remove(powerCycle);
+        psMenu.remove(sysReset);
+
+        psMenu.add(pressHold);
+        psMenu.add(powerCycle);
+        psMenu.add(sysReset);
     }
 
     protected void makeKbMenu(JMenuBar jMenuBar) {
-        ClassLoader classLoader = getClass().getClassLoader();
-        this.kbMenu = new JMenu(locinfo.MENUSTR_1003);
-        this.kbCAFMenu = new JMenu("CTRL-ALT-Fn");
-        this.kbAFMenu = new JMenu("ALT-Fn");
-        this.kbLangMenu = new JMenu(locinfo.MENUSTR_100E);
-        this.ctlAltDel = new JMenuItem(locinfo.MENUSTR_1008);
-        this.ctlAltDel.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
-        this.ctlAltDel.setActionCommand("kbCtlAltDel");
-        this.ctlAltDel.addActionListener(this);
-        this.kbMenu.add(this.ctlAltDel);
-        this.numLock = new JMenuItem(locinfo.MENUSTR_1009);
-        this.numLock.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
-        this.numLock.setActionCommand("kbNumLock");
-        this.numLock.addActionListener(this);
-        this.kbMenu.add(this.numLock);
-        this.capsLock = new JMenuItem(locinfo.MENUSTR_1020);
-        this.capsLock.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
-        this.capsLock.setActionCommand("kbCapsLock");
-        this.capsLock.addActionListener(this);
-        this.kbMenu.add(this.capsLock);
-        this.ctlAltBack = new JMenuItem("CTRL-ALT-BACKSPACE");
-        this.ctlAltBack.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
-        this.ctlAltBack.setActionCommand("kbCtlAltBack");
-        this.ctlAltBack.addActionListener(this);
-        this.ctlAltFn = new JMenuItem[this.REMCONS_MAX_FN_KEYS];
-        for (int i = 0; i < this.REMCONS_MAX_FN_KEYS; i++) {
-            this.ctlAltFn[i] = new JMenuItem("CTRL-ALT-F" + (i + 1));
-            this.ctlAltFn[i].setActionCommand("kbCtrlAltFn" + i);
-            this.ctlAltFn[i].addActionListener(this);
-            this.kbCAFMenu.add(this.ctlAltFn[i]);
+        kbMenu = new JMenu(locinfo.MENUSTR_1003);
+        kbCAFMenu = new JMenu("CTRL-ALT-Fn");
+        kbAFMenu = new JMenu("ALT-Fn");
+        kbLangMenu = new JMenu(locinfo.MENUSTR_100E);
+
+        ctlAltDel = new JMenuItem(locinfo.MENUSTR_1008);
+        ctlAltDel.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
+        ctlAltDel.setActionCommand("kbCtlAltDel");
+        ctlAltDel.addActionListener(this);
+        kbMenu.add(ctlAltDel);
+
+        numLock = new JMenuItem(locinfo.MENUSTR_1009);
+        numLock.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
+        numLock.setActionCommand("kbNumLock");
+        numLock.addActionListener(this);
+        kbMenu.add(numLock);
+
+        capsLock = new JMenuItem(locinfo.MENUSTR_1020);
+        capsLock.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
+        capsLock.setActionCommand("kbCapsLock");
+        capsLock.addActionListener(this);
+        kbMenu.add(capsLock);
+
+        ctlAltBack = new JMenuItem("CTRL-ALT-BACKSPACE");
+        ctlAltBack.setIcon(new ImageIcon(Utils.getResourceImage(this, "Keyboard.png")));
+        ctlAltBack.setActionCommand("kbCtlAltBack");
+        ctlAltBack.addActionListener(this);
+        ctlAltFn = new JMenuItem[REMCONS_MAX_FN_KEYS];
+
+        for (int i = 0; i < REMCONS_MAX_FN_KEYS; i++) {
+            ctlAltFn[i] = new JMenuItem("CTRL-ALT-F" + (i + 1));
+            ctlAltFn[i].setActionCommand("kbCtrlAltFn" + i);
+            ctlAltFn[i].addActionListener(this);
+            kbCAFMenu.add(ctlAltFn[i]);
         }
-        this.AltFn = new JMenuItem[this.REMCONS_MAX_FN_KEYS];
-        for (int i2 = 0; i2 < this.REMCONS_MAX_FN_KEYS; i2++) {
-            this.AltFn[i2] = new JMenuItem("ALT-F" + (i2 + 1));
-            this.AltFn[i2].setActionCommand("kbAltFn" + i2);
-            this.AltFn[i2].addActionListener(this);
-            this.kbAFMenu.add(this.AltFn[i2]);
+
+        AltFn = new JMenuItem[REMCONS_MAX_FN_KEYS];
+
+        for (int i2 = 0; i2 < REMCONS_MAX_FN_KEYS; i2++) {
+            AltFn[i2] = new JMenuItem("ALT-F" + (i2 + 1));
+            AltFn[i2].setActionCommand("kbAltFn" + i2);
+            AltFn[i2].addActionListener(this);
+            kbAFMenu.add(AltFn[i2]);
         }
-        this.localKbdLayout = new JCheckBoxMenuItem[this.REMCONS_MAX_KBD_LAYOUT];
-        for (int i3 = 0; i3 < this.REMCONS_MAX_KBD_LAYOUT; i3++) {
-            this.localKbdLayout[i3] = new JCheckBoxMenuItem(locinfo.MENUSTR_100F + i3);
-            this.localKbdLayout[i3].setActionCommand("localKbdLayout" + i3);
-            this.localKbdLayout[i3].addItemListener(this);
-            this.kbLangMenu.add(this.localKbdLayout[i3]);
+
+        localKbdLayout = new JCheckBoxMenuItem[REMCONS_MAX_KBD_LAYOUT];
+
+        for (int i3 = 0; i3 < REMCONS_MAX_KBD_LAYOUT; i3++) {
+            localKbdLayout[i3] = new JCheckBoxMenuItem(locinfo.MENUSTR_100F + i3);
+            localKbdLayout[i3].setActionCommand("localKbdLayout" + i3);
+            localKbdLayout[i3].addItemListener(this);
+            kbLangMenu.add(localKbdLayout[i3]);
         }
-        this.localKbdLayout[0].setSelected(true);
+
+        localKbdLayout[0].setSelected(true);
+
         if (!System.getProperty("os.name").toLowerCase().startsWith("windows")) {
-            this.kbMenu.add(this.ctlAltBack);
-            this.kbMenu.add(this.kbCAFMenu);
-            this.kbMenu.add(this.kbAFMenu);
-            this.kbMenu.add(this.kbLangMenu);
+            kbMenu.add(ctlAltBack);
+            kbMenu.add(kbCAFMenu);
+            kbMenu.add(kbAFMenu);
+            kbMenu.add(kbLangMenu);
         }
-        this.kbMenu.addSeparator();
-        this.hotKeys = new JMenuItem(locinfo.MENUSTR_1021);
-        this.hotKeys.addActionListener(this);
-        this.kbMenu.add(this.hotKeys);
-        jMenuBar.add(this.kbMenu);
+
+        kbMenu.addSeparator();
+
+        hotKeys = new JMenuItem(locinfo.MENUSTR_1021);
+
+        hotKeys.addActionListener(this);
+        kbMenu.add(hotKeys);
+
+        jMenuBar.add(kbMenu);
     }
 
     public void actionPerformed(ActionEvent actionEvent) {
-        if (actionEvent.getSource() == this.momPress) {
-            this.remconsObj.session.sendMomPress();
-        } else if (actionEvent.getSource() == this.pressHold) {
-            this.remconsObj.session.sendPressHold();
-        } else if (actionEvent.getSource() == this.powerCycle) {
-            this.remconsObj.session.sendPowerCycle();
-        } else if (actionEvent.getSource() == this.sysReset) {
-            this.remconsObj.session.sendSystemReset();
-        } else if (actionEvent.getSource() == this.ctlAltDel) {
-            this.remconsObj.session.send_ctrl_alt_del();
-        } else if (actionEvent.getSource() == this.numLock) {
-            this.remconsObj.session.send_num_lock();
-        } else if (actionEvent.getSource() == this.capsLock) {
-            this.remconsObj.session.send_caps_lock();
-        } else if (actionEvent.getSource() == this.ctlAltBack) {
-            this.remconsObj.session.send_ctrl_alt_back();
-        } else if (actionEvent.getSource() == this.hotKeys) {
-            this.remconsObj.viewHotKeys();
-        } else if (actionEvent.getSource() == this.vdMenuItemCrImage) {
-            this.virtdevsObj.createImage();
-        } else if (actionEvent.getSource() == this.aboutJirc) {
-            this.remconsObj.viewAboutJirc();
+        if (actionEvent.getSource() == momPress) {
+            remconsObj.session.sendMomPress();
+        } else if (actionEvent.getSource() == pressHold) {
+            remconsObj.session.sendPressHold();
+        } else if (actionEvent.getSource() == powerCycle) {
+            remconsObj.session.sendPowerCycle();
+        } else if (actionEvent.getSource() == sysReset) {
+            remconsObj.session.sendSystemReset();
+        } else if (actionEvent.getSource() == ctlAltDel) {
+            remconsObj.session.send_ctrl_alt_del();
+        } else if (actionEvent.getSource() == numLock) {
+            remconsObj.session.send_num_lock();
+        } else if (actionEvent.getSource() == capsLock) {
+            remconsObj.session.send_caps_lock();
+        } else if (actionEvent.getSource() == ctlAltBack) {
+            remconsObj.session.send_ctrl_alt_back();
+        } else if (actionEvent.getSource() == hotKeys) {
+            remconsObj.viewHotKeys();
+        } else if (actionEvent.getSource() == vdMenuItemCrImage) {
+            virtdevsObj.createImage();
+        } else if (actionEvent.getSource() == aboutJirc) {
+            remconsObj.viewAboutJirc();
         } else {
             int i = 0;
+
             while (true) {
-                if (i >= this.REMCONS_MAX_FN_KEYS) {
+                if (i >= REMCONS_MAX_FN_KEYS) {
                     break;
-                } else if (actionEvent.getSource() == this.ctlAltFn[i]) {
-                    this.remconsObj.session.send_ctrl_alt_fn(i);
+                } else if (actionEvent.getSource() == ctlAltFn[i]) {
+                    remconsObj.session.send_ctrl_alt_fn(i);
                     break;
-                } else if (actionEvent.getSource() == this.AltFn[i]) {
-                    this.remconsObj.session.send_alt_fn(i);
+                } else if (actionEvent.getSource() == AltFn[i]) {
+                    remconsObj.session.send_alt_fn(i);
                     break;
                 } else {
                     i++;
                 }
             }
-            if (i >= this.REMCONS_MAX_FN_KEYS) {
+
+            if (i >= REMCONS_MAX_FN_KEYS) {
                 System.out.println("Unhandled ActionItem" + actionEvent.getActionCommand());
             }
         }
@@ -595,104 +704,157 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
         String str = null;
         String str2 = null;
         int stateChange = itemEvent.getStateChange();
-        for (int i = 0; i < this.REMCONS_MAX_KBD_LAYOUT; i++) {
-            if (this.localKbdLayout[i] == itemEvent.getSource() && stateChange == 1) {
+
+        for (int i = 0; i < REMCONS_MAX_KBD_LAYOUT; i++) {
+            if (localKbdLayout[i] == itemEvent.getSource() && stateChange == 1) {
                 System.out.println(i);
-                this.localKbdLayout[i].setSelected(true);
+                localKbdLayout[i].setSelected(true);
                 kbdLayoutMenuHandler(i);
                 return;
             }
         }
+
         int i2 = 0;
+
         while (true) {
-            if (i2 >= this.vdmenuIndx) {
+            if (i2 >= vdmenuIndx) {
                 break;
-            } else if (this.vdMenuItems[i2] == itemEvent.getSource()) {
-                abstractButton = this.vdMenuItems[i2];
+            } else if (vdMenuItems[i2] == itemEvent.getSource()) {
+                abstractButton = vdMenuItems[i2];
                 str = abstractButton.getActionCommand();
                 str2 = abstractButton.getLabel();
+
                 break;
             } else {
                 i2++;
             }
         }
+
         if (abstractButton == null || str == null) {
             System.out.println("Unhandled item event");
         } else if (str.equals("fd" + locinfo.STATUSSTR_3117)) {
             if (stateChange == 2) {
-                this.virtdevsObj.do_floppy(str2);
+                virtdevsObj.do_floppy(str2);
                 lockFdMenu(true, str2);
             } else if (stateChange == 1) {
-                this.dispFrame.setVisible(false);
+                dispFrame.setVisible(false);
                 String string = new VFileDialog(locinfo.DIALOGSTR_2045, "*.img").getString();
-                this.dispFrame.setVisible(true);
+                dispFrame.setVisible(true);
+
                 if (string != null) {
-                    if (this.virtdevsObj.fdThread != null) {
-                        this.virtdevsObj.change_disk(this.virtdevsObj.fdConnection, string);
+                    if (virtdevsObj.fdThread != null) {
+                        virtdevsObj.change_disk(virtdevsObj.fdConnection, string);
                     }
+
                     System.out.println("Image file: " + string);
-                    lockFdMenu(!this.virtdevsObj.do_floppy(string), str2);
+                    lockFdMenu(!virtdevsObj.do_floppy(string), str2);
                 } else {
                     lockFdMenu(true, str2);
                 }
             }
         } else if (str.equals("cd" + locinfo.STATUSSTR_3117)) {
             if (stateChange == 2) {
-                this.virtdevsObj.do_cdrom(str2);
+                virtdevsObj.do_cdrom(str2);
                 lockCdMenu(true, str2);
             } else if (stateChange == 1) {
-                this.dispFrame.setVisible(false);
+                dispFrame.setVisible(false);
                 String string2 = new VFileDialog(locinfo.DIALOGSTR_2045, "*.iso").getString();
-                this.dispFrame.setVisible(true);
+                dispFrame.setVisible(true);
+
                 if (string2 != null) {
-                    if (this.virtdevsObj.cdThread != null) {
-                        this.virtdevsObj.change_disk(this.virtdevsObj.cdConnection, string2);
+                    if (virtdevsObj.cdThread != null) {
+                        virtdevsObj.change_disk(virtdevsObj.cdConnection, string2);
                     }
                     System.out.println("Image file: " + string2);
-                    lockCdMenu(!this.virtdevsObj.do_cdrom(string2), str2);
+                    lockCdMenu(!virtdevsObj.do_cdrom(string2), str2);
                 } else {
                     lockCdMenu(true, str2);
                 }
             }
         } else if (str.startsWith("cd")) {
-            if (this.virtdevsObj.do_cdrom(str2)) {
+            if (virtdevsObj.do_cdrom(str2)) {
                 lockCdMenu(stateChange != 1, str2);
             }
         } else if (str.startsWith("fd")) {
-            if (this.virtdevsObj.do_floppy(str2)) {
+            if (virtdevsObj.do_floppy(str2)) {
                 lockFdMenu(stateChange != 1, str2);
             }
         } else if (str.equals("FLOPPY") || str.equals("CDROM")) {
             boolean z = false;
             if (stateChange == 2) {
-                this.jsonObj.postJSONRequest("vm_status", "{\"method\":\"set_virtual_media_options\", \"device\":\"" + str + "\", \"command\":\"EJECT\", \"session_key\":\"" + getParameter("RCINFO1") + "\"}");
-                this.remconsObj.session.set_status(3, "Unmounted URL");
+                jsonObj.postJSONRequest(
+                        "vm_status",
+                        "{\"method\":\"set_virtual_media_options\", \"device\":\""
+                                + str
+                                + "\", \"command\":\"EJECT\", \"session_key\":\""
+                                + getParameter("RCINFO1")
+                                + "\"}"
+                );
+                remconsObj.session.set_status(3, "Unmounted URL");
             } else if (stateChange == 1) {
-                this.remconsObj.setDialogIsOpen(true);
-                String userInput = new URLDialog(this.remconsObj).getUserInput();
+                remconsObj.setDialogIsOpen(true);
+                String userInput = new URLDialog(remconsObj).getUserInput();
+
                 if (userInput.compareTo("userhitcancel") == 0 || userInput.compareTo("userhitclose") == 0) {
                     userInput = null;
                 }
+
                 if (userInput != null) {
                     userInput = userInput.replaceAll("[\\u0000-\u001F]", "");
                     System.out.println("url:  " + userInput);
                 }
-                this.remconsObj.setDialogIsOpen(false);
+
+                remconsObj.setDialogIsOpen(false);
+
                 if (userInput != null) {
-                    String postJSONRequest = this.jsonObj.postJSONRequest("vm_status", "{\"method\":\"set_virtual_media_options\", \"device\":\"" + str + "\", \"command\":\"INSERT\", \"url\":\"" + userInput + "\", \"session_key\":\"" + getParameter("RCINFO1") + "\"}");
+                    String postJSONRequest = jsonObj.postJSONRequest(
+                            "vm_status",
+                            "{\"method\":\"set_virtual_media_options\", \"device\":\""
+                                    + str
+                                    + "\", \"command\":\"INSERT\", \"url\":\""
+                                    + userInput
+                                    + "\", \"session_key\":\""
+                                    + getParameter("RCINFO1")
+                                    + "\"}"
+                    );
+
                     if (Objects.equals(postJSONRequest, "Success")) {
-                        postJSONRequest = this.jsonObj.postJSONRequest("vm_status", "{\"method\":\"set_virtual_media_options\", \"device\":\"" + str + "\", \"boot_option\":\"CONNECT\", \"command\":\"SET\", \"url\":\"" + userInput + "\", \"session_key\":\"" + getParameter("RCINFO1") + "\"}");
+                        postJSONRequest = jsonObj.postJSONRequest(
+                                "vm_status",
+                                "{\"method\":\"set_virtual_media_options\", \"device\":\""
+                                        + str
+                                        + "\", \"boot_option\":\"CONNECT\", \"command\":\"SET\", \"url\":\""
+                                        + userInput
+                                        + "\", \"session_key\":\""
+                                        + getParameter("RCINFO1")
+                                        + "\"}"
+                        );
                     }
                     if (Objects.equals(postJSONRequest, "SCSI_ERR_NO_LICENSE")) {
-                        new VErrorDialog(this.dispFrame, locinfo.DIALOGSTR_202c, "<html>" + locinfo.DIALOGSTR_2015 + " " + locinfo.DIALOGSTR_2016 + " " + locinfo.DIALOGSTR_202d + "<br><br>" + locinfo.DIALOGSTR_202e + "</html>", true);
+                        new VErrorDialog(
+                                dispFrame,
+                                locinfo.DIALOGSTR_202c,
+                                "<html>"
+                                        + locinfo.DIALOGSTR_2015
+                                        + " "
+                                        + locinfo.DIALOGSTR_2016
+                                        + " "
+                                        + locinfo.DIALOGSTR_202d
+                                        + "<br><br>"
+                                        + locinfo.DIALOGSTR_202e
+                                        + "</html>",
+                                true
+                        );
                     } else if (!Objects.equals(postJSONRequest, "Success")) {
-                        new VErrorDialog(this.dispFrame, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_2064, true);
+                        new VErrorDialog(dispFrame, locinfo.DIALOGSTR_2014, locinfo.DIALOGSTR_2064, true);
                     } else {
                         z = true;
-                        this.remconsObj.session.set_status(3, locinfo.STATUSSTR_3125);
+
+                        remconsObj.session.set_status(3, locinfo.STATUSSTR_3125);
                     }
                 }
             }
+
             if (str.equals("FLOPPY")) {
                 lockFdMenu(!z, str2);
             } else if (str.equals("CDROM")) {
@@ -702,92 +864,98 @@ public class intgapp extends JApplet implements Runnable, ActionListener, ItemLi
     }
 
     public void kbdLayoutMenuHandler(int i) {
-        for (int i2 = 0; i2 < this.REMCONS_MAX_KBD_LAYOUT; i2++) {
+        for (int i2 = 0; i2 < REMCONS_MAX_KBD_LAYOUT; i2++) {
             if (i2 != i) {
-                this.localKbdLayout[i2].setSelected(false);
+                localKbdLayout[i2].setSelected(false);
             }
         }
-        this.remconsObj.setLocalKbdLayout(i);
+
+        remconsObj.setLocalKbdLayout(i);
     }
 
     public static class WindowCloser extends WindowAdapter {
-        private final intgapp this$0;
+        private final intgapp app;
 
         WindowCloser(intgapp intgappVar) {
-            this.this$0 = intgappVar;
+            app = intgappVar;
         }
 
         public void windowClosing(WindowEvent windowEvent) {
-            this.this$0.stop();
-            this.this$0.exit = true;
+            app.stop();
+            app.exit = true;
         }
     }
 
     private void ApplyRcInfoParameters(String str) {
-        this.vm_port = null;
-        this.vm_key = null;
-        this.rc_port = null;
-        this.enc_key = null;
-        Arrays.fill(this.enc_key_val, (byte) 0);
+        vm_port = null;
+        vm_key = null;
+        rc_port = null;
+        enc_key = null;
+        Arrays.fill(enc_key_val, (byte) 0);
         String trim = str.trim();
+
         for (String str2 : trim.substring(1, trim.length() - 1).split(",")) {
             String[] split = str2.split(":");
             if (split.length != 2) {
                 System.out.println("Error in ApplyRcInfoParameters");
                 return;
             }
+
             String trim2 = split[0].trim();
             String substring = trim2.substring(1, trim2.length() - 1);
             String trim3 = split[1].trim();
+
             if (trim3.charAt(0) == '\"') {
                 trim3 = trim3.substring(1, trim3.length() - 1);
             }
+
             if (substring.compareToIgnoreCase("enc_key") == 0) {
-                this.enc_key = trim3;
-                for (int i = 0; i < this.enc_key_val.length; i++) {
+                enc_key = trim3;
+                for (int i = 0; i < enc_key_val.length; i++) {
                     try {
-                        this.enc_key_val[i] = (byte) Integer.parseInt(this.enc_key.substring(i * 2, (i * 2) + 2), 16);
+                        enc_key_val[i] =
+                                (byte) Integer.parseInt(enc_key.substring(i * 2, (i * 2) + 2), 16);
                     } catch (NumberFormatException e) {
                         System.out.println("Failed to Parse enc_key");
                     }
                 }
             } else if (substring.compareToIgnoreCase("rc_port") == 0) {
                 System.out.println("rc_port:" + trim3);
-                this.rc_port = trim3;
+                rc_port = trim3;
             } else if (substring.compareToIgnoreCase("vm_key") == 0) {
-                this.vm_key = trim3;
+                vm_key = trim3;
             } else if (substring.compareToIgnoreCase("vm_port") == 0) {
                 System.out.println("vm_port:" + trim3);
-                this.vm_port = trim3;
+                vm_port = trim3;
             } else if (substring.equalsIgnoreCase("optional_features")) {
                 System.out.println("optional_features:" + trim3);
-                this.optional_features = trim3;
+                optional_features = trim3;
             } else if (substring.compareToIgnoreCase("server_name") == 0) {
                 System.out.println("server_name:" + trim3);
-                this.server_name = trim3;
+                server_name = trim3;
             } else if (substring.compareToIgnoreCase("ilo_fqdn") == 0) {
                 System.out.println("ilo_fqdn:" + trim3);
-                this.ilo_fqdn = trim3;
+                ilo_fqdn = trim3;
             } else if (substring.compareToIgnoreCase("blade") == 0) {
-                this.blade = Integer.parseInt(trim3);
-                System.out.println("blade:" + this.blade);
-            } else if (this.blade == 1 && substring.compareToIgnoreCase("enclosure") == 0) {
+                blade = Integer.parseInt(trim3);
+                System.out.println("blade:" + blade);
+            } else if (blade == 1 && substring.compareToIgnoreCase("enclosure") == 0) {
                 if (!trim3.equals("null")) {
-                    this.in_enclosure = true;
+                    in_enclosure = true;
                     System.out.println("enclosure:" + trim3);
-                    this.enclosure = trim3;
+                    enclosure = trim3;
                 }
-            } else if (this.blade == 1 && substring.compareToIgnoreCase("bay") == 0) {
-                this.bay = Integer.parseInt(trim3);
-                System.out.println("bay:" + this.bay);
+            } else if (blade == 1 && substring.compareToIgnoreCase("bay") == 0) {
+                bay = Integer.parseInt(trim3);
+                System.out.println("bay:" + bay);
             }
         }
     }
 
     public void moveUItoInit(boolean z) {
         System.out.println("Disable Menus\n");
-        this.psMenu.setEnabled(z);
-        this.vdMenu.setEnabled(z);
-        this.kbMenu.setEnabled(z);
+        psMenu.setEnabled(z);
+        vdMenu.setEnabled(z);
+        kbMenu.setEnabled(z);
     }
 }

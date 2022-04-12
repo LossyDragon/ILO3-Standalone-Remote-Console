@@ -4,6 +4,7 @@ import java.awt.Image
 import java.awt.Toolkit
 import javax.swing.JApplet
 
+@Suppress("DEPRECATION")
 class Utils {
     companion object {
         @JvmStatic

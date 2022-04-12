@@ -17,20 +17,6 @@ class Http {
         @JvmField
         val sslContext: SSLContext = SSLContext.getInstance("TLS")
 
-        @JvmStatic
-        private fun getUrlHostname(ip: String): String = "https://$ip"
-
-        @JvmStatic
-        fun getLoginUrl(hostname: String): String = "${getUrlHostname(hostname)}/json/login_session"
-
-        @JvmStatic
-        fun getLoginBody(username: String, password: String): String =
-            "{\"method\":\"login\",\"user_login\":\"$username\",\"password\":\"$password\"}"
-
-        @JvmStatic
-        fun getJavaAppletUrl(hostname: String, sessionKey: String?): String =
-            "${getUrlHostname(hostname)}/html/java_irc.html?sessionKey=${sessionKey.orEmpty()}"
-
         private val trustAllCerts: Array<TrustManager> = arrayOf(
             object : X509TrustManager {
                 override fun getAcceptedIssuers(): Array<X509Certificate?> = arrayOfNulls(0)
@@ -45,5 +31,19 @@ class Http {
             val props: Properties = System.getProperties()
             props.setProperty("jdk.internal.httpclient.disableHostnameVerification", true.toString())
         }
+
+        @JvmStatic
+        private fun getUrlHostname(ip: String): String = "https://$ip"
+
+        @JvmStatic
+        fun getLoginUrl(hostname: String): String = "${getUrlHostname(hostname)}/json/login_session"
+
+        @JvmStatic
+        fun getLoginBody(username: String, password: String): String =
+            "{\"method\":\"login\",\"user_login\":\"$username\",\"password\":\"$password\"}"
+
+        @JvmStatic
+        fun getJavaAppletUrl(hostname: String, sessionKey: String?): String =
+            "${getUrlHostname(hostname)}/html/java_irc.html?sessionKey=${sessionKey.orEmpty()}"
     }
 }

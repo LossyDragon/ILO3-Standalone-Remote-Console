@@ -181,5 +181,4 @@ public class locinfo {
     public static final String TOOLSTR_4002 = "Health LED";
     public static final String TOOLSTR_4003 = "Encryption";
     public static final String TOOLSTR_4004 = "Activity LED for virtual media mounted by this application. Does not show activity for URL mounted virtual media.";
-
 }
