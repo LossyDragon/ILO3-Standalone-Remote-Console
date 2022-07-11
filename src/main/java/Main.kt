@@ -70,9 +70,9 @@ fun main(args: Array<String>) {
             FileInputStream(config.get()).use {
                 Properties().run {
                     load(it)
-                    hostname = getProperty("hostname")
-                    username = getProperty("username")
-                    password = getProperty("password")
+                    hostname = getProperty("hostname").orEmpty()
+                    username = getProperty("username").orEmpty()
+                    password = getProperty("password").orEmpty()
                 }
             }
         } catch (e: Exception) {
@@ -80,6 +80,11 @@ fun main(args: Array<String>) {
             e.printStackTrace()
             return
         }
+    }
+
+    if(hostname.isBlank()|| username.isBlank() || password.isBlank())  {
+        println("hostname, username, or password is blank!")
+        exitProcess(1)
     }
 
     Http.sessionKey = doAuthentication(hostname, username, password)
