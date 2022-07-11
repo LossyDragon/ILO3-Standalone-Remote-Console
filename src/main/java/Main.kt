@@ -4,6 +4,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import model.LoginResponse
 import util.Http
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.URL
 import java.util.*
@@ -18,6 +19,8 @@ import kotlin.system.exitProcess
  *
  * This program mimics https://github.com/scrapes/ILO2-Standalone-Remote-Console/ closely since ILO3 is basically
  * ILO2, but with json requests/responses
+ *
+ * VM args: -Djava.security.properties=java.security
  *
  * Notes:
  *      Regex find and replace: getLocalString\((.*?)\) -> $1
@@ -65,7 +68,7 @@ fun main(args: Array<String>) {
         }
     }
 
-    if (config.isPresent) {
+    config.ifPresent {
         try {
             FileInputStream(config.get()).use {
                 Properties().run {
@@ -75,14 +78,13 @@ fun main(args: Array<String>) {
                     password = getProperty("password").orEmpty()
                 }
             }
-        } catch (e: Exception) {
-            System.err.println("Error reading config file")
-            e.printStackTrace()
-            return
+        } catch (e: FileNotFoundException) {
+            System.err.println("Error reading config file or config.properties does not exist!")
+            exitProcess(1)
         }
     }
 
-    if(hostname.isBlank()|| username.isBlank() || password.isBlank())  {
+    if (hostname.isBlank() || username.isBlank() || password.isBlank()) {
         println("hostname, username, or password is blank!")
         exitProcess(1)
     }
@@ -91,9 +93,10 @@ fun main(args: Array<String>) {
         ?: throw java.lang.NullPointerException("SessionKey shouldn't have been null!")
 
     // Everything should be OK now. Connect to the applet.
-    val intgapp = intgapp(hostname)
-    intgapp.init()
-    intgapp.start()
+    intgapp(hostname).run {
+        init()
+        start()
+    }
 }
 
 private fun doAuthentication(hostname: String, username: String, password: String): String? {
